@@ -1,119 +1,200 @@
-### [中文](./README-zh_cn.md) | English
-# obsidian-editing-toolbar Plugin
+# Editing Toolbar Math
 
-> [!tip]
-> The 3.x version has been completely refactored with numerous new features. For advanced usage, please refer to: [Editing Toolbar Plugin Advanced Guide · PKM-er/obsidian-editing-toolbar · Discussion #217](https://github.com/PKM-er/obsidian-editing-toolbar/discussions/217)"
+> 基于 [Editing Toolbar](https://github.com/cumany/obsidian-editing-toolbar)（原版 v4.0.11）的 **个人 fork**，插件 id 为 `editing-toolbar-math`，专门解决 **数学笔记里工具栏上色 / 高亮 / 引用** 与 MathJax 公式不兼容的问题。
 
-![](editing-toolbar-demo.gif)
+**仓库：** https://github.com/Yancy-gate/editing-toolbar-math  
+**当前版本：** `4.0.11-math.5`（在 upstream `4.0.11` 之上叠加 math 系列补丁）
 
-Thanks to the [cmenu](https://github.com/chetachiezikeuzor/cMenu-Plugin) plugin, which gave me a lot of inspiration, but this plugin has not been maintained for more than a year, so I re-modified it and added a lot of interesting features, including the top toolbar, cursor following, etc., so editing toolbar was created.
+---
 
-**Obsidian Editing Toolbar** is a plugin that provides a toolbar similar to MS-Word，and adds a minimal and user friendly text editor modal for a smoother writing/editing experience . This plugin makes text editing and firing commands easier for those that don't wish to configure a multitude of hotkeys.No need to remember complex markdown commands, similar to a rich text editor as WYSIWYG.
-This plugin was specifically designed for note-takers that want to have a simple text editor to aid in marking up their notes. It solves the issue of having to memorize numerous hotkeys and/or use multiple key presses to get the desired markup. A simple toolbar to improve your writing experience in Obsidian！
+## 为什么要 fork？
 
-> It is recommended to work with [Enhanced Editing Plugin](https://github.com/obsidian-canzi/Enhanced-editing), which can add more useful editing commands.
+原版 Editing Toolbar 的上色、荧光笔高亮、引用块，都是按 **普通 Markdown 文字** 设计的。在含 `$...$` / `$$...$$` 的数学笔记里会出现：
 
+| 现象 | 原因 |
+|------|------|
+| 高亮后公式仍是黑字、黄底断档 | `==高亮==` / `<mark>` 无法作用到 MathJax 渲染层 |
+| 整段高亮后公式显示成源码 | `==` 与 `$$` 粘在一起，破坏数学环境 |
+| 引用块左侧紫线在公式处断开 | 块级公式行没有 `>` 前缀，Live Preview 不视为引用内容 |
 
+本 fork **不改原版插件 id**（避免与官方社区插件冲突），以独立插件安装，可与原版二选一使用（**不要同时启用两个**）。
 
+---
 
-## TOC
+## 相对原版的改进一览
 
-- [obsidian-editing-toolbar Plugin](#obsidian-editing-toolbar-plugin)
-  - [TOC](#toc)
-  - [how-to-install](#how-to-install)
-  - [Video Introduction](#video-introduction)
-  - [Key Features](#key-features)
-    - [Work with other plugins](#work-with-other-plugins)
-    - [Full Vault showcase](#full-vault-showcase)
-    - [support](#support)
+| 功能 | 原版行为 | 本 fork |
+|------|----------|---------|
+| 荧光笔 `==高亮==` | 只包文字，公式跳过 | 文字 `==...==`，公式写入 `\bbox[#色]{...}` |
+| 背景色（调色板） | 只包 `<mark>`，公式跳过 | 文字 `<mark>`，公式 `\bbox` |
+| 部分选中公式 | 无特殊处理 | **只给选中那截 LaTeX 上色**（不扩成整个 `$...$`） |
+| 再次高亮 | 可能叠多层 | **覆盖**旧 `\bbox` / `\colorbox` |
+| 格式橡皮擦 | 不清公式内样式 | **一并去掉** `\bbox` / `\colorbox` |
+| `==` 与 `$$` 粘连 | 易出现 | 自动插入换行，避免公式变源码 |
+| 引用块 + `$$` / 图片 | 公式行常无 `>`，紫线断 | 选区每行都加 `>`；CSS 延续紫线 |
+| 阅读模式公式高亮 | 无 | `<mark>` 内公式补背景 CSS |
 
-## how-to-install
+**尚未实现（计划下一版）：** 工具栏直接改公式**字色**（`\textcolor`）。当前只做**背景高亮**，不改字色。
 
-Please Refer: [How to install Obsidian Plugins](https://forum.obsidian.md/t/plugins-mini-faq/7737)
+---
 
-## Video Introduction
+## 详细说明
 
-[About Cmenu toolbar](https://www.bilibili.com/video/BV1mY4y1T7g2/)
+### 1. 公式感知高亮（荧光笔 `==`）
 
-[Obsidian 插件：Editing Toolbar 必装的可视化编辑工具]( https://pkmer.cn/show/20230329145815 )
+**涉及命令：** `Highlight`（`editing-toolbar-math:toggle-highlight`）
 
-## Key Features
-This differs from the cmenu plugin in the following points:
+- 选中文字后点荧光笔：
+  - **普通文字** → 包 `==...==`
+  - **行内 `$...$`、块级 `$$...$$`** → 在公式内部写 `\bbox[#ffe066]{...}`（默认色接近 Obsidian 高亮黄）
+- **部分选中公式（行为 B）**：例如只选中 `\lambda_2`，只给这一截加 `\bbox`，不会把整个 `$...$` 都上色。
+- **再点一次高亮**：去掉 `==` 和 `\bbox`。
+- **旧笔记修复**：若已有 `==...$公式$...==` 且公式没 bbox，再点一次高亮会**自动修复**为「文字用 `==`、公式用 `\bbox`」。
 
-1. add a new toolbar style tiny
+**示例：**
 
-   ![](https://raw.githubusercontent.com/cumany/cumany/main//pic/202209071131715.png)
+```markdown
+故 $\bbox[#ffe066]{A^*}$ 有特征值 $\bbox[#ffe066]{\frac{|A|}{\lambda}}$ 。
+```
 
-2. add toolbar position options, top, following
+### 2. 公式感知背景色（调色板）
 
-   ![](https://raw.githubusercontent.com/cumany/cumany/main//pic/202209071133753.png)
-   ![](https://raw.githubusercontent.com/cumany/cumany/main//pic/202209071751006.gif)
-3. support multi-window, multi-tab adapted to obsidian 0.14+
-4. add some built-in commands
-   1. change-font-color
-   2. change-background-color
-   3. indent-list
-   4. undent-list
-   5. editor-undo
-   6. editor-redo
-   7. hrline  
-      will insert a `---` split line
-   8. justify Both ends aligned
-      Inserts an html code to align the text at both ends `<p align="justify">..... </p>`
-   9. left  
-      Insert an html code to align the text left `<p align="left">..... </p>`
-   10. right  
-       Insert an html code to align the text right `<p align="right">..... </p>`
-   11. center  
-       Insert an html code to center the text `<center>..... </center>`
-   12. fullscreen-focus
-       Default binding shortcut key `Ctrl+shift+F11`
-       Will make the notes page display full screen, let you focus more on the writing itself. To exit full screen press ESC or execute the full screen command again
-   13. workplace-fullscreen-focus
-       Default binding shortcut key `Ctrl+F11`
-       Unlike fullscreen-focus mode, this one just hides the left and right sidebar panels, it's only workspace full screen
-   14. head 1-6 level heading settings
-       Default binding shortcut key `Ctrl+1,ctrl+2,...Ctrl+6`
-       ![](https://raw.githubusercontent.com/cumany/cumany/main//pic/202209071707695.png)
-   15. support custom command icons
-       ![](https://raw.githubusercontent.com/cumany/cumany/main//pic/202209071717111.gif)
-   16. Support modify command name
-       ![](https://raw.githubusercontent.com/cumany/cumany/main//pic/202209071720159.gif)
-   17. Support for adding submenus
-       ![](https://raw.githubusercontent.com/cumany/cumany/main//pic/202209071722207.gif)
-   18. Support menu dragging and sorting
-   19. Add formatting brush function Built-in two kinds of formatting brush for font color and background color (middle mouse button or right click can cancel the formatting brush status)
-       ![](https://raw.githubusercontent.com/cumany/cumany/main//pic/202209071731151.gif)
-   20. Adaptive shrinkage of toolbar icon width
-       ![](https://raw.githubusercontent.com/cumany/cumany/main/pic/202209072157728.gif)
+**涉及：** 工具栏背景色按钮 / `change-background-color`
 
+- 逻辑与荧光笔类似，但文字侧用 HTML：
+  - 文字 → `<mark style="background:#色">...</mark>`
+  - 公式 → `\bbox[#色]{...}`
+- 支持 `rgba(...)` 自动转成 `#rrggbb` 供 `\bbox` 使用。
 
+### 3. 防止 `==` 与 `$$` 粘连
 
-### Work with other plugins
+高亮混排时，若写成：
 
-1. [emjoi toolbar ](obsidian://show-plugin?id=obsidian-emoji-toolbar) Quickly Insert a  emoji 
-   ![](https://raw.githubusercontent.com/cumany/cumany/main/pic/202209092001600.gif)
+```markdown
+…特征值==)$$
+\left| ... \right|
+$$(==注意…==)
+```
 
+Obsidian 会把 `$$` 当坏掉的数学环境，**整段显示 LaTeX 源码**。
 
-2.  [Obsidian-Table-Generator](https://github.com/Quorafind/Obsidian-Table-Generator/)  & [ob-table-enhance](https://github.com/Stardusten/ob-table-enhancer) Quickly Insert a table and edit 
-   ![](https://raw.githubusercontent.com/cumany/cumany/main/pic/202209092008571.gif)
+本 fork 在写入后自动规范化，例如：
 
-> The above plugins are available from the example vault , all of which have been optimized and have some bugs fixed
-☟☟☟
+```markdown
+…特征值==)
+$$
+\left| ... \right|
+$$
+(==注意…==)
+```
 
+### 4. 格式橡皮擦支持公式
 
-### Full Vault showcase
+**涉及：** `Format Eraser`（格式橡皮擦）
 
-This is the Obsidian example vault is amazing, there are a lot of dazzling features and showcase, I believe you will wonder a bit, is this Obsidian?
-[Blue-topaz-examples](https://github.com/cumany/Blue-topaz-examples)
+- 清除选区格式时，会去掉公式里的 `\bbox`、`\colorbox`，恢复为普通 `$...$`。
 
-### support
-Thank you very much for your support!
+### 5. 引用块紫线穿过公式
 
-<div align="center">
-<img src="https://raw.githubusercontent.com/cumany/cumany/main/pic/202209192228895.png" width="400px">
-</div>
+**涉及：** 工具栏「引用」/ `editor:toggle-blockquote`
 
+**问题：** Live Preview 里引用紫线只画在有 `> ` 的行上；`$$` 块、图片嵌入行若没有 `>`，紫线会断。
 
-<div align="center"><a href="https://www.buymeacoffee.com/Cuman"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee &emoji=&slug=Cuman&button_colour=BD5FFF&font_colour=ffffff&font_family=Poppins&outline_colour=000000&coffee_colour=FFDD00" /></a>
-</div>
+**改进：**
+
+1. **逻辑**：框选后点引用时，选区内**每一行**（含 `$$`、空行）都加/去 `> `，不再只处理文字行。
+2. **CSS**：为引用后的公式块、图片嵌入补左侧边框与背景，阅读模式 / Note 预览里紫线更连贯。
+
+**若旧笔记紫线仍断：** 框选整段（含公式）再点一次「引用」即可补上缺失的 `>`。
+
+### 6. Live Preview / 阅读模式 CSS 补丁
+
+`styles.css` 中额外包含：
+
+- `==高亮==` 旁的行内公式背景衔接
+- `<mark>` 内 MathJax 容器背景
+- 引用块内块级公式、图片的左边线延续
+
+---
+
+## 安装
+
+### 方式 A：手动安装（推荐）
+
+1. 在本仓库 [Releases](https://github.com/Yancy-gate/editing-toolbar-math/releases) 或 `Editing-Toolbar-Test-Vault/.obsidian/plugins/editing-toolbar-math/` 取构建产物：
+   - `main.js`
+   - `manifest.json`
+   - `styles.css`
+2. 复制到库的 `.obsidian/plugins/editing-toolbar-math/`
+3. **设置 → 第三方插件**：启用 **Editing Toolbar Math**，**关闭**原版 **Editing Toolbar**
+4. 重载 Obsidian
+
+### 方式 B：从源码构建
+
+```bash
+git clone https://github.com/Yancy-gate/editing-toolbar-math.git
+cd editing-toolbar-math
+npm install --legacy-peer-deps
+npm run build
+```
+
+产物目录：`Editing-Toolbar-Test-Vault/.obsidian/plugins/editing-toolbar-math/`
+
+---
+
+## 使用提示
+
+1. **不要与原版 Editing Toolbar 同时开启**（命令 id、工具栏会冲突）。
+2. 第一次启用后，可在设置里按需调整工具栏按钮；也可从原版导出配置再导入（注意命令 id 已变为 `editing-toolbar-math:*`）。
+3. 数学笔记推荐流程：
+   - 混排文字 + 公式 → 框选 → 点**荧光笔**或**背景色**
+   - 长引用含公式 → 框选整段 → 点**引用**
+4. 若公式仍显示源码，检查是否有 `==)$$` 或 `$$(==` 粘连；对选区再点一次高亮可自动修复。
+
+---
+
+## 开发与测试
+
+```bash
+npm install --legacy-peer-deps
+npx tsx scripts/test-math-highlight.ts   # 公式高亮单元测试
+npm run build
+```
+
+**主要新增源码：**
+
+| 文件 | 作用 |
+|------|------|
+| `src/util/mathHighlight.ts` | 公式区间识别、`\bbox` 读写、荧光笔/背景色、防粘连 |
+| `src/util/blockquoteMath.ts` | 引用块逐行加 `>` |
+| `src/util/util.ts` | `setBackgroundcolor` 接入公式逻辑 |
+| `src/commands/commands.ts` | `toggle-highlight`、引用命令挂钩 |
+| `src/modals/editingToolbarModal.ts` | 格式橡皮擦清 `\bbox` |
+| `styles.css` | 公式高亮与引用紫线 CSS |
+| `scripts/test-math-highlight.ts` | 单元测试 |
+
+---
+
+## 版本记录（math 系列）
+
+| 版本 | 说明 |
+|------|------|
+| `4.0.11-math.1` | 初版 fork；背景色 + `\bbox`；独立插件 id |
+| `4.0.11-math.2` | 荧光笔 `==` 支持公式；修复旧 `==$...$==` |
+| `4.0.11-math.3` | 部分选中公式只上色选中片段（行为 B） |
+| `4.0.11-math.4` | 防止 `==` 与 `$$` 粘连导致公式变源码 |
+| `4.0.11-math.5` | 引用块紫线穿过 `$$` / 图片；引用逐行加 `>` |
+
+---
+
+## 与上游的关系
+
+- **上游：** [cumany/obsidian-editing-toolbar](https://github.com/cumany/obsidian-editing-toolbar)（亦见 [PKM-er](https://github.com/PKM-er/obsidian-editing-toolbar) 镜像）
+- **本 fork：** 仅维护数学笔记相关补丁，**不打算合并回上游**（个人库专用）。
+- 原版英文说明见仓库内历史文档；上游功能（AI 工具栏、多配置、跟随工具栏等）均保留。
+
+---
+
+## 许可
+
+与上游相同（MIT）。原版版权归 [Cuman](https://github.com/cumany) 及贡献者；math 系列补丁由本 fork 维护。
