@@ -1,9 +1,9 @@
 {
   "id": "editing-toolbar-math",
   "name": "Editing Toolbar Math",
-  "version": "4.0.11-math.2",
+  "version": "4.0.11-math.3",
   "minAppVersion": "0.14.0",
-  "description": "Fork of Editing Toolbar: math-aware ==highlight== and background color (\\bbox). Disable original Editing Toolbar while using this.",
+  "description": "Fork of Editing Toolbar: math-aware ==highlight== / background (\\bbox). Partial selection colors only the selected LaTeX. Disable original Editing Toolbar while using this.",
   "author": "Cuman (fork)",
   "authorUrl": "https://github.com/cumany/obsidian-editing-toolbar",
   "isDesktopOnly": false

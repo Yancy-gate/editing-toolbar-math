@@ -19,8 +19,7 @@ import {
   renumberSelection,
 } from "src/util/util";
 import {
-  expandOffsetsToFullMath,
-  toggleEqualsHighlightWithMath,
+  toggleEqualsHighlightInDocRange,
   DEFAULT_HIGHLIGHT_BBOX_COLOR,
 } from "src/util/mathHighlight";
 import { fullscreenMode, workplacefullscreenMode } from "src/util/fullscreen";
@@ -1061,28 +1060,6 @@ export class CommandsManager {
         const editor = this.getActiveEditor();
         if (!editor) return;
         this.executeCommandWithoutBlur(editor, () => {
-          try {
-            const from = editor.getCursor("from");
-            const to = editor.getCursor("to");
-            const fromOff = editor.posToOffset(from);
-            const toOff = editor.posToOffset(to);
-            if (fromOff !== toOff) {
-              const expanded = expandOffsetsToFullMath(
-                editor.getValue(),
-                fromOff,
-                toOff
-              );
-              if (expanded.from !== fromOff || expanded.to !== toOff) {
-                editor.setSelection(
-                  editor.offsetToPos(expanded.from),
-                  editor.offsetToPos(expanded.to)
-                );
-              }
-            }
-          } catch {
-            /* keep selection */
-          }
-
           const selectText = editor.getSelection();
           if (!selectText || !selectText.trim()) {
             // No selection: fall back to native toggle (insert ==|==)
@@ -1090,12 +1067,21 @@ export class CommandsManager {
             return;
           }
 
-          const next = toggleEqualsHighlightWithMath(
-            selectText,
-            DEFAULT_HIGHLIGHT_BBOX_COLOR
-          );
-          if (next !== selectText) {
-            editor.replaceSelection(next);
+          try {
+            const fromOff = editor.posToOffset(editor.getCursor("from"));
+            const toOff = editor.posToOffset(editor.getCursor("to"));
+            // Behavior B: do not expand to full formula
+            const next = toggleEqualsHighlightInDocRange(
+              editor.getValue(),
+              fromOff,
+              toOff,
+              DEFAULT_HIGHLIGHT_BBOX_COLOR
+            );
+            if (next !== selectText) {
+              editor.replaceSelection(next);
+            }
+          } catch {
+            editor.toggleMarkdownFormatting("highlight");
           }
         });
       },

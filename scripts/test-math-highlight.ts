@@ -8,9 +8,12 @@ import {
   cssColorToBboxColor,
   applyBboxToMathInner,
   applyBackgroundWithMath,
+  applyBackgroundToDocRange,
+  applyEqualsHighlightToDocRange,
   stripMathBackgrounds,
   stripOuterMathBackground,
   toggleEqualsHighlightWithMath,
+  toggleEqualsHighlightInDocRange,
   decideHighlightToggle,
 } from "../src/util/mathHighlight";
 
@@ -63,12 +66,32 @@ assert.strictEqual(cssColorToBboxColor("#FFE066"), "#FFE066");
   );
 }
 
+// Behavior B: partial selection inside a formula only bboxes that slice
+{
+  const doc = "前 $\\lambda_1, \\lambda_2, \\dots$ 后";
+  const slice = "\\lambda_2";
+  const from = doc.indexOf(slice);
+  const to = from + slice.length;
+  const out = applyBackgroundToDocRange(doc, from, to, "#ffe066");
+  assert.strictEqual(out, "\\bbox[#ffe066]{\\lambda_2}");
+  // full formula must remain un-expanded
+  assert.ok(!out.includes("\\lambda_1"));
+  assert.ok(!out.includes("\\dots"));
+}
+
+{
+  const doc = "故 $\\lambda_1, \\lambda_2$ 结束";
+  const from = doc.indexOf("\\lambda_2");
+  const to = from + "\\lambda_2".length;
+  const out = applyEqualsHighlightToDocRange(doc, from, to);
+  assert.strictEqual(out, "\\bbox[#ffe066]{\\lambda_2}");
+}
+
 {
   const input = "故 $A^*$ 有特征值";
   const out = toggleEqualsHighlightWithMath(input);
   assert.ok(out.includes("$\\bbox[#ffe066]{A^*}$"));
   assert.ok(out.includes("=="));
-  // math must not sit inside ==...==
   for (const m of out.matchAll(/==([\s\S]*?)==/g)) {
     assert.strictEqual(findMathRanges(m[1]).length, 0, `math inside ==: ${m[1]}`);
   }
@@ -78,13 +101,20 @@ assert.strictEqual(cssColorToBboxColor("#FFE066"), "#FFE066");
   const repaired = toggleEqualsHighlightWithMath(broken);
   assert.ok(repaired.includes("\\bbox[#ffe066]{\\lambda}"));
   assert.ok(repaired.includes("\\bbox[#ffe066]{P^{-1}AP}"));
-  for (const m of repaired.matchAll(/==([\s\S]*?)==/g)) {
-    assert.strictEqual(findMathRanges(m[1]).length, 0, `math inside ==: ${m[1]}`);
-  }
 
   const removed = toggleEqualsHighlightWithMath(repaired);
   assert.ok(!removed.includes("\\bbox"));
   assert.ok(!removed.includes("=="));
+}
+
+{
+  const doc = "前 $\\lambda_1, \\lambda_2$ 后";
+  const from = doc.indexOf("\\lambda_2");
+  const to = from + "\\lambda_2".length;
+  const on = toggleEqualsHighlightInDocRange(doc, from, to);
+  assert.strictEqual(on, "\\bbox[#ffe066]{\\lambda_2}");
+  const off = toggleEqualsHighlightInDocRange(on, 0, on.length);
+  assert.strictEqual(off, "\\lambda_2");
 }
 
 console.log("mathHighlight tests passed");

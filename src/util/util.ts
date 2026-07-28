@@ -1,8 +1,7 @@
 import { Editor,Command,MarkdownView } from "obsidian";
 import { syntaxTree } from '@codemirror/language';
 import {
-  applyBackgroundWithMath,
-  expandOffsetsToFullMath,
+  applyBackgroundToDocRange,
 } from "src/util/mathHighlight";
 export async function wait(delay: number) {
   return new Promise((resolve) => setTimeout(resolve, delay));
@@ -326,32 +325,27 @@ export function setFontcolor(color: string, editor?: Editor) {
 export function setBackgroundcolor(color: string, editor?: Editor) {
   if (!editor) return;
 
-  // Expand partial math selections to full $...$ / $$...$$ spans
-  try {
-    const from = editor.getCursor("from");
-    const to = editor.getCursor("to");
-    const fromOff = editor.posToOffset(from);
-    const toOff = editor.posToOffset(to);
-    if (fromOff !== toOff) {
-      const expanded = expandOffsetsToFullMath(editor.getValue(), fromOff, toOff);
-      if (expanded.from !== fromOff || expanded.to !== toOff) {
-        editor.setSelection(
-          editor.offsetToPos(expanded.from),
-          editor.offsetToPos(expanded.to)
-        );
-      }
-    }
-  } catch {
-    // Older editors without posToOffset: keep current selection
-  }
-
   const selectText = editor.getSelection();
 
   if (!selectText || selectText.trim() === "") {
     return;
   }
 
-  const finalText = applyBackgroundWithMath(selectText, color);
+  let finalText = selectText;
+  try {
+    const fromOff = editor.posToOffset(editor.getCursor("from"));
+    const toOff = editor.posToOffset(editor.getCursor("to"));
+    // Behavior B: do not expand to full $...$; only selected LaTeX slices get \bbox
+    finalText = applyBackgroundToDocRange(
+      editor.getValue(),
+      fromOff,
+      toOff,
+      color
+    );
+  } catch {
+    finalText = applyBackgroundToDocRange(selectText, 0, selectText.length, color);
+  }
+
   if (finalText === selectText) {
     return;
   }
