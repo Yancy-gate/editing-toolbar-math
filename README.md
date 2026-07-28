@@ -3,7 +3,7 @@
 > 基于 [Editing Toolbar](https://github.com/cumany/obsidian-editing-toolbar)（原版 v4.0.11）的 **个人 fork**，插件 id 为 `editing-toolbar-math`，专门解决 **数学笔记里工具栏上色 / 高亮 / 引用** 与 MathJax 公式不兼容的问题。
 
 **仓库：** https://github.com/Yancy-gate/editing-toolbar-math  
-**当前版本：** `4.0.11-math.5`（在 upstream `4.0.11` 之上叠加 math 系列补丁）
+**当前版本：** `4.0.11-math.6`（在 upstream `4.0.11` 之上叠加 math 系列补丁）
 
 ---
 
@@ -184,6 +184,7 @@ npm run build
 | `4.0.11-math.3` | 部分选中公式只上色选中片段（行为 B） |
 | `4.0.11-math.4` | 防止 `==` 与 `$$` 粘连导致公式变源码 |
 | `4.0.11-math.5` | 引用块紫线穿过 `$$` / 图片；引用逐行加 `>` |
+| `4.0.11-math.6` | 修复混选“文字+公式”高亮时的兜底路径；异常场景仍保持公式感知高亮 |
 
 ---
 

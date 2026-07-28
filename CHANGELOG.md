@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.0.11-math.6 (2026-07-28)
+### fixed
+- Keep highlight fallback math-aware for mixed text + formula selections.
+- Add regression test for one-shot mixed selection highlighting.
+
 ## 4.0.11 (2026-07-14)
 ### #330 fixed
 ### 增加ai自定义模型提示和日文翻译
