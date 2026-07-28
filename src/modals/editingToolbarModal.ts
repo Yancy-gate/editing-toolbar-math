@@ -12,6 +12,7 @@ import { ViewUtils } from 'src/util/viewUtils';
 import { setBottomValue, setHorizontalValue } from "src/util/statusBarConstants";
 import { Editor } from "obsidian";
 import { setFontcolor, setBackgroundcolor } from "src/util/util";
+import { stripMathBackgrounds } from "src/util/mathHighlight";
 import { AI_TOOLBAR_COMMAND_ID } from "src/ai/toolbarCommand";
 import { AI_TOOLBOX_ACTIONS } from "src/ai/toolboxActions";
 import { DEFAULT_REWRITE_ACTIONS, type RewriteInstruction } from "src/ai/types";
@@ -719,6 +720,9 @@ export function setFormateraser(plugin: editingToolbarPlugin, editor: Editor) {
   selectText = selectText.replace(/\*\*\*([^\*]+)\*\*\*/g, "$1");
   selectText = selectText.replace(/\*\*?([^\*]+)\*\*?/g, "$1");
   selectText = selectText.replace(/~~([^~]+)~~/g, "$1");
+
+  // Strip MathJax \bbox / \colorbox inside formulas (and bare bbox fragments)
+  selectText = stripMathBackgrounds(selectText);
 
   // selectText = selectText.replace(/(\r*\n)+/mg, "\r\n");
   editor.replaceSelection(selectText);

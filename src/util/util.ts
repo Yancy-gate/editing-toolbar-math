@@ -1,5 +1,6 @@
 import { Editor,Command,MarkdownView } from "obsidian";
 import { syntaxTree } from '@codemirror/language';
+import { applyBackgroundToDocRange } from "src/util/mathHighlight";
 export async function wait(delay: number) {
   return new Promise((resolve) => setTimeout(resolve, delay));
 }
@@ -328,73 +329,45 @@ export function setBackgroundcolor(color: string, editor?: Editor) {
     return;
   }
 
-  // Regex to match background color tags, with multiline support
-  const bgColorRegex = /<mark\s+style=["']?background:(?:#[0-9a-fA-F]{3,6}|rgba?\([^)]+\))["']?>([\s\S]*?)<\/mark>/g;
-  const hasColorTag = bgColorRegex.test(selectText);
+  let finalText = selectText;
+  try {
+    const fromOff = editor.posToOffset(editor.getCursor("from"));
+    const toOff = editor.posToOffset(editor.getCursor("to"));
+    // Behavior B: do not expand to full $...$; only selected LaTeX slices get \bbox
+    finalText = applyBackgroundToDocRange(
+      editor.getValue(),
+      fromOff,
+      toOff,
+      color
+    );
+  } catch {
+    finalText = applyBackgroundToDocRange(selectText, 0, selectText.length, color);
+  }
 
-  // Function to check if the text is already wrapped in the same background color
-  const isAlreadyInSameColor = (text: string, targetColor: string): boolean => {
-    // 转义正则表达式中的特殊字符，特别是对于rgba格式
-    const escapedColor = targetColor.replace(/([()[{*+.$^\\|?])/g, '\\$1');
-    const cleanColorRegex = new RegExp(`^<mark\\s+style=["']?background:${escapedColor}["']?>([\s\S]+)<\\/mark>$`);
-    return cleanColorRegex.test(text.trim());
-  };
-
-  // If the text is already in the same color, do nothing
-  if (isAlreadyInSameColor(selectText, color)) {
+  if (finalText === selectText) {
     return;
   }
 
-  let finalText;
-  
-  if (hasColorTag) {
-    // 如果已经有背景色标签，只替换颜色值
-    finalText = selectText.replace(/(background:)(?:#[0-9a-fA-F]{3,6}|rgba?\([^)]+\))/gi, `$1${color}`);
-  } else {
-    // 如果没有背景色标签，为每行添加背景色
-    finalText = selectText.split('\n').map(line => 
-      line.trim() ? `<mark style="background:${color}">${line}</mark>` : line
-    ).join('\n');
-  }
-
-  // Store the current selection
+  const lengthDelta = finalText.length - selectText.length;
   const currentSelection = editor.listSelections();
-  const adjustedSelections = currentSelection.map(sel => {
-    const tagLength = hasColorTag ? 0 : `<mark style="background:${color}"></mark>`.length;
-    const isForward = sel.anchor.line < sel.head.line || 
-                      (sel.anchor.line === sel.head.line && sel.anchor.ch < sel.head.ch);
+  const adjustedSelections = currentSelection.map((sel) => {
+    const isForward =
+      sel.anchor.line < sel.head.line ||
+      (sel.anchor.line === sel.head.line && sel.anchor.ch < sel.head.ch);
 
     if (isForward) {
-      // 从前到后选择
       return {
-        anchor: {
-          line: sel.anchor.line,
-          ch: sel.anchor.ch
-        },
-        head: {
-          line: sel.head.line,
-          ch: sel.head.ch + tagLength
-        }
-      };
-    } else {
-      // 从后到前选择
-      return {
-        anchor: {
-          line: sel.anchor.line,
-          ch: sel.anchor.ch + tagLength
-        },
-        head: {
-          line: sel.head.line,
-          ch: sel.head.ch
-        }
+        anchor: { line: sel.anchor.line, ch: sel.anchor.ch },
+        head: { line: sel.head.line, ch: sel.head.ch + lengthDelta },
       };
     }
+    return {
+      anchor: { line: sel.anchor.line, ch: sel.anchor.ch + lengthDelta },
+      head: { line: sel.head.line, ch: sel.head.ch },
+    };
   });
 
-  // Replace the selection
   editor.replaceSelection(finalText);
-
-  // Restore the original selection
   editor.setSelections(adjustedSelections);
 }
 // 重编号选中的行

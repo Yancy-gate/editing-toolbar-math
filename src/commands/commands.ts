@@ -18,6 +18,10 @@ import {
   setBackgroundcolor,
   renumberSelection,
 } from "src/util/util";
+import {
+  toggleEqualsHighlightInDocRange,
+  DEFAULT_HIGHLIGHT_BBOX_COLOR,
+} from "src/util/mathHighlight";
 import { fullscreenMode, workplacefullscreenMode } from "src/util/fullscreen";
 import editingToolbarPlugin from "src/plugin/main";
 import { InsertCalloutModal } from "src/modals/insertCalloutModal";
@@ -1054,10 +1058,31 @@ export class CommandsManager {
       name: "Highlight",
       callback: () => {
         const editor = this.getActiveEditor();
-        editor &&
-          this.executeCommandWithoutBlur(editor, () =>
-            editor?.toggleMarkdownFormatting("highlight")
-          );
+        if (!editor) return;
+        this.executeCommandWithoutBlur(editor, () => {
+          const selectText = editor.getSelection();
+          if (!selectText || !selectText.trim()) {
+            editor.toggleMarkdownFormatting("highlight");
+            return;
+          }
+
+          try {
+            const fromOff = editor.posToOffset(editor.getCursor("from"));
+            const toOff = editor.posToOffset(editor.getCursor("to"));
+            // Behavior B: do not expand to full formula
+            const next = toggleEqualsHighlightInDocRange(
+              editor.getValue(),
+              fromOff,
+              toOff,
+              DEFAULT_HIGHLIGHT_BBOX_COLOR
+            );
+            if (next !== selectText) {
+              editor.replaceSelection(next);
+            }
+          } catch {
+            editor.toggleMarkdownFormatting("highlight");
+          }
+        });
       },
       icon: "highlight-glyph",
     });
