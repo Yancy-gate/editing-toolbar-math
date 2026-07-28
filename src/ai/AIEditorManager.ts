@@ -2116,7 +2116,7 @@ export class AIEditorManager {
       closeBtn.addEventListener("click", closePrompt);
       settingsBtn.addEventListener("click", () => {
         this.plugin.app.setting.open();
-        this.plugin.app.setting.openTabById("editing-toolbar");
+        this.plugin.app.setting.openTabById("editing-toolbar-math");
         setTimeout(() => {
           const tabsContainer = this.plugin.app.setting.activeTab?.containerEl?.querySelector(".editing-toolbar-tabs");
           if (tabsContainer) {

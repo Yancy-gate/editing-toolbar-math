@@ -1121,12 +1121,12 @@ updateCurrentCommands(commands: any[], style?: string): void {
           detectedFormat = true;
         } else if (/^<font color=".*">.*<\/font>$/.test(selectedText)) {
           // 字体颜色
-          this.lastExecutedCommand = "editing-toolbar:change-font-color";
+          this.lastExecutedCommand = "editing-toolbar-math:change-font-color";
           this.lastExecutedCommandName = "Font Color";
           detectedFormat = true;
         } else if (/^<mark style="background:.*">.*<\/mark>$/.test(selectedText)) {
           // 背景颜色
-          this.lastExecutedCommand = "editing-toolbar:change-background-color";
+          this.lastExecutedCommand = "editing-toolbar-math:change-background-color";
           this.lastExecutedCommandName = "Background Color";
           detectedFormat = true;
         } else if (/^<u>([^<]+)<\/u>$/.test(selectedText)) {
@@ -1134,27 +1134,27 @@ updateCurrentCommands(commands: any[], style?: string): void {
           this.lastExecutedCommandName = "Underline";
           detectedFormat = true;
         } else if (/^<center>([^<]+)<\/center>$/.test(selectedText)) {
-          this.lastExecutedCommand = "editing-toolbar:center";
+          this.lastExecutedCommand = "editing-toolbar-math:center";
           this.lastExecutedCommandName = "Center";
           detectedFormat = true;
         } else if (/^<p align="left">(.*?)<\/p>$/.test(selectedText)) {
-          this.lastExecutedCommand = "editing-toolbar:left";
+          this.lastExecutedCommand = "editing-toolbar-math:left";
           this.lastExecutedCommandName = "Left Align";
           detectedFormat = true;
         } else if (/^<p align="right">(.*?)<\/p>$/.test(selectedText)) {
-          this.lastExecutedCommand = "editing-toolbar:right";
+          this.lastExecutedCommand = "editing-toolbar-math:right";
           this.lastExecutedCommandName = "Right Align";
           detectedFormat = true;
         } else if (/^<p align="justify">(.*?)<\/p>$/.test(selectedText)) {
-          this.lastExecutedCommand = "editing-toolbar:justify";
+          this.lastExecutedCommand = "editing-toolbar-math:justify";
           this.lastExecutedCommandName = "Justify";
           detectedFormat = true;
         } else if (/^<sup>(.*?)<\/sup>$/.test(selectedText)) {
-          this.lastExecutedCommand = "editing-toolbar:superscript";
+          this.lastExecutedCommand = "editing-toolbar-math:superscript";
           this.lastExecutedCommandName = "Superscript";
           detectedFormat = true;
         } else if (/^<sub>(.*?)<\/sub>$/.test(selectedText)) {
-          this.lastExecutedCommand = "editing-toolbar:subscript";
+          this.lastExecutedCommand = "editing-toolbar-math:subscript";
           this.lastExecutedCommandName = "Subscript";
           detectedFormat = true;
         } else if (
@@ -1215,7 +1215,7 @@ updateCurrentCommands(commands: any[], style?: string): void {
           const formatEnd = match.index + match[0].length;
           if (cursorPos > formatStart && cursorPos < formatEnd) {
             foundFormats.push({
-              command: "editing-toolbar:toggle-underline",
+              command: "editing-toolbar-math:toggle-underline",
               name: "Underline",
               distance: Math.min(
                 cursorPos - formatStart,
@@ -1232,7 +1232,7 @@ updateCurrentCommands(commands: any[], style?: string): void {
           const formatEnd = match.index + match[0].length;
           if (cursorPos > formatStart && cursorPos < formatEnd) {
             foundFormats.push({
-              command: "editing-toolbar:center",
+              command: "editing-toolbar-math:center",
               name: "Center",
               distance: Math.min(
                 cursorPos - formatStart,
@@ -1249,7 +1249,7 @@ updateCurrentCommands(commands: any[], style?: string): void {
           const formatEnd = match.index + match[0].length;
           if (cursorPos > formatStart && cursorPos < formatEnd) {
             foundFormats.push({
-              command: "editing-toolbar:left",
+              command: "editing-toolbar-math:left",
               name: "Left Align",
               distance: Math.min(
                 cursorPos - formatStart,
@@ -1266,7 +1266,7 @@ updateCurrentCommands(commands: any[], style?: string): void {
           const formatEnd = match.index + match[0].length;
           if (cursorPos > formatStart && cursorPos < formatEnd) {
             foundFormats.push({
-              command: "editing-toolbar:right",
+              command: "editing-toolbar-math:right",
               name: "Right Align",
               distance: Math.min(
                 cursorPos - formatStart,
@@ -1283,7 +1283,7 @@ updateCurrentCommands(commands: any[], style?: string): void {
           const formatEnd = match.index + match[0].length;
           if (cursorPos > formatStart && cursorPos < formatEnd) {
             foundFormats.push({
-              command: "editing-toolbar:justify",
+              command: "editing-toolbar-math:justify",
               name: "Justify",
               distance: Math.min(
                 cursorPos - formatStart,
@@ -1300,7 +1300,7 @@ updateCurrentCommands(commands: any[], style?: string): void {
           const formatEnd = match.index + match[0].length;
           if (cursorPos > formatStart && cursorPos < formatEnd) {
             foundFormats.push({
-              command: "editing-toolbar:superscript",
+              command: "editing-toolbar-math:superscript",
               name: "Superscript",
               distance: Math.min(
                 cursorPos - formatStart,
@@ -1317,7 +1317,7 @@ updateCurrentCommands(commands: any[], style?: string): void {
           const formatEnd = match.index + match[0].length;
           if (cursorPos > formatStart && cursorPos < formatEnd) {
             foundFormats.push({
-              command: "editing-toolbar:subscript",
+              command: "editing-toolbar-math:subscript",
               name: "Subscript",
               distance: Math.min(
                 cursorPos - formatStart,
@@ -1403,7 +1403,7 @@ updateCurrentCommands(commands: any[], style?: string): void {
           const formatEnd = match.index + match[0].length;
           if (cursorPos > formatStart && cursorPos < formatEnd) {
             foundFormats.push({
-              command: "editing-toolbar:change-font-color",
+              command: "editing-toolbar-math:change-font-color",
               name: "Font Color",
               distance: Math.min(
                 cursorPos - formatStart,
@@ -1420,7 +1420,7 @@ updateCurrentCommands(commands: any[], style?: string): void {
           const formatEnd = match.index + match[0].length;
           if (cursorPos > formatStart && cursorPos < formatEnd) {
             foundFormats.push({
-              command: "editing-toolbar:change-background-color",
+              command: "editing-toolbar-math:change-background-color",
               name: "Background Color",
               distance: Math.min(
                 cursorPos - formatStart,

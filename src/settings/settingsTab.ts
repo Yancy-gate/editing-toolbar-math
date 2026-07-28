@@ -902,14 +902,14 @@ export class editingToolbarSettingTab extends PluginSettingTab {
           } else {
             // 原有的单配置逻辑
             const isInToolbar = this.plugin.settings.menuCommands.some(
-              cmd => cmd.id === `editing-toolbar:${command.id}`
+              cmd => cmd.id === `editing-toolbar-math:${command.id}`
             );
             if (isInToolbar) {
               new Notice(t('This command is already in the toolbar.'));
               return;
             }
             const toolbarCommand = {
-              id: `editing-toolbar:${command.id}`,
+              id: `editing-toolbar-math:${command.id}`,
               name: command.name,
               icon: command.icon || 'obsidian-new'
             };
@@ -937,7 +937,7 @@ export class editingToolbarSettingTab extends PluginSettingTab {
             });
         })
         .addButton(button => this.createDeleteButton(button, async () => {
-          const customCommandId = `editing-toolbar:${this.plugin.settings.customCommands[index].id}`;
+          const customCommandId = `editing-toolbar-math:${this.plugin.settings.customCommands[index].id}`;
           // 从所有配置中删除该命令
           this.removeCommandFromConfig(this.plugin.settings.menuCommands, customCommandId);
 

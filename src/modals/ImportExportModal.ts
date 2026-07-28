@@ -574,16 +574,16 @@ export class ImportExportModal extends Modal {
   // 修复导入的命令ID
   fixImportedCommandIds() {
     const commandMappings: { [key: string]: string } = {
-      'editor:toggle-numbered-list': 'editing-toolbar:toggle-numbered-list',
-      'editor:toggle-bullet-list': 'editing-toolbar:toggle-bullet-list',
-      'editor:toggle-highlight': 'editing-toolbar:toggle-highlight',
-      'toggle-highlight': 'editing-toolbar:toggle-highlight',
-      'editing-toolbar:editor:toggle-bold': 'editing-toolbar:toggle-bold',
-      'editing-toolbar:editor:toggle-italics': 'editing-toolbar:toggle-italics',
-      'editing-toolbar:editor:toggle-strikethrough': 'editing-toolbar:toggle-strikethrough',
-      'editing-toolbar:editor:toggle-inline-math': 'editing-toolbar:toggle-inline-math',
-      'editing-toolbar:editor:insert-callout': 'editing-toolbar:insert-callout',
-      'editing-toolbar:editor:insert-link': 'editing-toolbar:insert-link',
+      'editor:toggle-numbered-list': 'editing-toolbar-math:toggle-numbered-list',
+      'editor:toggle-bullet-list': 'editing-toolbar-math:toggle-bullet-list',
+      'editor:toggle-highlight': 'editing-toolbar-math:toggle-highlight',
+      'toggle-highlight': 'editing-toolbar-math:toggle-highlight',
+      'editing-toolbar-math:editor:toggle-bold': 'editing-toolbar-math:toggle-bold',
+      'editing-toolbar-math:editor:toggle-italics': 'editing-toolbar-math:toggle-italics',
+      'editing-toolbar-math:editor:toggle-strikethrough': 'editing-toolbar-math:toggle-strikethrough',
+      'editing-toolbar-math:editor:toggle-inline-math': 'editing-toolbar-math:toggle-inline-math',
+      'editing-toolbar-math:editor:insert-callout': 'editing-toolbar-math:insert-callout',
+      'editing-toolbar-math:editor:insert-link': 'editing-toolbar-math:insert-link',
       'cMenuToolbar-Divider-Line': 'editingToolbar-Divider-Line',
     };
 

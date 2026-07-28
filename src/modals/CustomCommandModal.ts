@@ -395,7 +395,7 @@ addSpecialCharButtons(suffixSetting, suffixSetting.controlEl.querySelector('inpu
 
             if (oldIcon !== this.icon) {
               // 更新所有配置中的相关命令图标
-              const customCommandId = `editing-toolbar:${commandId}`;
+              const customCommandId = `editing-toolbar-math:${commandId}`;
 
               // 更新 menuCommands
               this.updateCommandIcon(this.plugin.settings.menuCommands, customCommandId);

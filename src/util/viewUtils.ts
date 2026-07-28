@@ -11,7 +11,7 @@ export class ViewUtils {
     const viewType = view.getViewType();
 
     // 尝试获取插件实例
-    const plugin = (window as any).app?.plugins?.plugins?.['editing-toolbar'] as editingToolbarPlugin | undefined;
+    const plugin = (window as any).app?.plugins?.plugins?.['editing-toolbar-math'] as editingToolbarPlugin | undefined;
     
     // 如果有插件设置且有视图类型设置，使用用户设置的值
     if (plugin?.settings?.viewTypeSettings && plugin.settings.viewTypeSettings[viewType] !== undefined) {

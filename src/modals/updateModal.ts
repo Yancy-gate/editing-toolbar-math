@@ -95,20 +95,20 @@ export class UpdateNoticeModal extends Modal {
   async fixCommandIds() {
     try {
       const commandMappings: { [key: string]: string } = {
-        "editor:toggle-numbered-list": "editing-toolbar:toggle-numbered-list",
-        "editor:toggle-bullet-list": "editing-toolbar:toggle-bullet-list",
-        "editor:toggle-highlight": "editing-toolbar:toggle-highlight",
-        "toggle-highlight": "editing-toolbar:toggle-highlight",
-        "editing-toolbar:editor:toggle-bold": "editing-toolbar:toggle-bold",
-        "editing-toolbar:editor:toggle-italics":
-          "editing-toolbar:toggle-italics",
-        "editing-toolbar:editor:toggle-strikethrough":
-          "editing-toolbar:toggle-strikethrough",
-        "editing-toolbar:editor:toggle-inline-math":
-          "editing-toolbar:toggle-inline-math",
-        "editing-toolbar:editor:insert-callout":
-          "editing-toolbar:insert-callout",
-        "editing-toolbar:editor:insert-link": "editing-toolbar:insert-link",
+        "editor:toggle-numbered-list": "editing-toolbar-math:toggle-numbered-list",
+        "editor:toggle-bullet-list": "editing-toolbar-math:toggle-bullet-list",
+        "editor:toggle-highlight": "editing-toolbar-math:toggle-highlight",
+        "toggle-highlight": "editing-toolbar-math:toggle-highlight",
+        "editing-toolbar-math:editor:toggle-bold": "editing-toolbar-math:toggle-bold",
+        "editing-toolbar-math:editor:toggle-italics":
+          "editing-toolbar-math:toggle-italics",
+        "editing-toolbar-math:editor:toggle-strikethrough":
+          "editing-toolbar-math:toggle-strikethrough",
+        "editing-toolbar-math:editor:toggle-inline-math":
+          "editing-toolbar-math:toggle-inline-math",
+        "editing-toolbar-math:editor:insert-callout":
+          "editing-toolbar-math:insert-callout",
+        "editing-toolbar-math:editor:insert-link": "editing-toolbar-math:insert-link",
         "cMenuToolbar-Divider-Line": "editingToolbar-Divider-Line",
       };
 
@@ -125,11 +125,11 @@ export class UpdateNoticeModal extends Modal {
             hasChanges = true;
           }
           // 查找格式刷命令并更新图标
-          if (cmd.id === "editing-toolbar:format-eraser") {
+          if (cmd.id === "editing-toolbar-math:format-eraser") {
             cmd.icon = "eraser";
             hasChanges = true;
           }
-          if (cmd.id === "editing-toolbar:change-font-color") {
+          if (cmd.id === "editing-toolbar-math:change-font-color") {
             cmd.icon =
               '<svg width="24" height="24" viewBox="0 0 24 24" focusable="false" fill="currentColor"><g fill-rule="evenodd"><path id="change-font-color-icon" d="M3 18h18v3H3z" style="fill:#2DC26B"></path><path d="M8.7 16h-.8a.5.5 0 01-.5-.6l2.7-9c.1-.3.3-.4.5-.4h2.8c.2 0 .4.1.5.4l2.7 9a.5.5 0 01-.5.6h-.8a.5.5 0 01-.4-.4l-.7-2.2c0-.3-.3-.4-.5-.4h-3.4c-.2 0-.4.1-.5.4l-.7 2.2c0 .3-.2.4-.4.4zm2.6-7.6l-.6 2a.5.5 0 00.5.6h1.6a.5.5 0 00.5-.6l-.6-2c0-.3-.3-.4-.5-.4h-.4c-.2 0-.4.1-.5.4z"></path></g></svg>';
             hasChanges = true;
@@ -146,7 +146,7 @@ export class UpdateNoticeModal extends Modal {
         if (!commands || !Array.isArray(commands)) return false;
 
         for (const cmd of commands) {
-          if (cmd.id === "editing-toolbar:toggle-format-brush") {
+          if (cmd.id === "editing-toolbar-math:toggle-format-brush") {
             return true;
           }
           if (cmd.SubmenuCommands) {
@@ -163,7 +163,7 @@ export class UpdateNoticeModal extends Modal {
 
         if (!checkFormatBrush(commands) && commands.length >= 2) {
           const formatBrushCommand: Command = {
-            id: "editing-toolbar:toggle-format-brush",
+            id: "editing-toolbar-math:toggle-format-brush",
             name: "Format Brush",
             icon: "paintbrush",
           };

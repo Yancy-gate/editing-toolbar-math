@@ -73,7 +73,7 @@ export class DeployCommandModal extends Modal {
     private deployCommand() {
       // 创建工具栏命令对象
       const toolbarCommand = {
-        id: `editing-toolbar:${this.command.id}`,
+        id: `editing-toolbar-math:${this.command.id}`,
         name: this.command.name,
         icon: this.command.icon || 'obsidian-new'
       };

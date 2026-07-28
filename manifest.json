@@ -1,10 +1,10 @@
 {
-  "id": "editing-toolbar",
-  "name": "Editing Toolbar",
-  "version": "4.0.11",
+  "id": "editing-toolbar-math",
+  "name": "Editing Toolbar Math",
+  "version": "4.0.11-math.2",
   "minAppVersion": "0.14.0",
-  "description": "The Obsidian Editing Toolbar is modified from cmenu, which provides more powerful customization settings and has many built-in editing commands to be a MS Word-like toolbar editing experience.",
-  "author": "Cuman",
+  "description": "Fork of Editing Toolbar: math-aware ==highlight== and background color (\\bbox). Disable original Editing Toolbar while using this.",
+  "author": "Cuman (fork)",
   "authorUrl": "https://github.com/cumany/obsidian-editing-toolbar",
   "isDesktopOnly": false
 }

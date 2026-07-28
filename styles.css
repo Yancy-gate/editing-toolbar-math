@@ -2734,3 +2734,20 @@ body.auto-hide-header .workspace-tab-header-container + .workspace-tab-container
 .editing-toolbar-ai-inline-body .setting-item {
   border-top: 1px solid var(--background-modifier-border-hover);
 }
+
+/* ---- Math-aware highlight (Editing Toolbar Math) ---- */
+/* Reading view: formulas inside == / <mark> get highlight background */
+.markdown-rendered mark mjx-container,
+.markdown-preview-view mark mjx-container,
+.markdown-reading-view mark mjx-container {
+  background-color: var(--text-highlight-bg) !important;
+  padding: 0.05em 0.12em;
+  border-radius: 2px;
+}
+
+/* Live Preview: math right after a highlight run */
+.markdown-source-view.mod-cm6 .cm-highlight + .cm-widgetBuffer + span.math,
+.markdown-source-view.mod-cm6 .cm-highlight + .cm-widgetBuffer + .math {
+  background-color: var(--text-highlight-bg) !important;
+  border-radius: 2px;
+}

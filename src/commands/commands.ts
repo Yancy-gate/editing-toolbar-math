@@ -18,6 +18,11 @@ import {
   setBackgroundcolor,
   renumberSelection,
 } from "src/util/util";
+import {
+  expandOffsetsToFullMath,
+  toggleEqualsHighlightWithMath,
+  DEFAULT_HIGHLIGHT_BBOX_COLOR,
+} from "src/util/mathHighlight";
 import { fullscreenMode, workplacefullscreenMode } from "src/util/fullscreen";
 import editingToolbarPlugin from "src/plugin/main";
 import { InsertCalloutModal } from "src/modals/insertCalloutModal";
@@ -1054,10 +1059,45 @@ export class CommandsManager {
       name: "Highlight",
       callback: () => {
         const editor = this.getActiveEditor();
-        editor &&
-          this.executeCommandWithoutBlur(editor, () =>
-            editor?.toggleMarkdownFormatting("highlight")
+        if (!editor) return;
+        this.executeCommandWithoutBlur(editor, () => {
+          try {
+            const from = editor.getCursor("from");
+            const to = editor.getCursor("to");
+            const fromOff = editor.posToOffset(from);
+            const toOff = editor.posToOffset(to);
+            if (fromOff !== toOff) {
+              const expanded = expandOffsetsToFullMath(
+                editor.getValue(),
+                fromOff,
+                toOff
+              );
+              if (expanded.from !== fromOff || expanded.to !== toOff) {
+                editor.setSelection(
+                  editor.offsetToPos(expanded.from),
+                  editor.offsetToPos(expanded.to)
+                );
+              }
+            }
+          } catch {
+            /* keep selection */
+          }
+
+          const selectText = editor.getSelection();
+          if (!selectText || !selectText.trim()) {
+            // No selection: fall back to native toggle (insert ==|==)
+            editor.toggleMarkdownFormatting("highlight");
+            return;
+          }
+
+          const next = toggleEqualsHighlightWithMath(
+            selectText,
+            DEFAULT_HIGHLIGHT_BBOX_COLOR
           );
+          if (next !== selectText) {
+            editor.replaceSelection(next);
+          }
+        });
       },
       icon: "highlight-glyph",
     });
@@ -1326,12 +1366,12 @@ export class CommandsManager {
 
     formatCommands.forEach((cmdId) => {
       const originalCommand =
-        this.plugin.app.commands.commands[`editing-toolbar:${cmdId}`];
+        this.plugin.app.commands.commands[`editing-toolbar-math:${cmdId}`];
       if (originalCommand && originalCommand.callback) {
         const originalCallback = originalCommand.callback;
         originalCommand.callback = () => {
           originalCallback();
-          this.plugin.setLastExecutedCommand(`editing-toolbar:${cmdId}`);
+          this.plugin.setLastExecutedCommand(`editing-toolbar-math:${cmdId}`);
         };
       }
     });
@@ -1354,10 +1394,10 @@ export class CommandsManager {
     // 移除旧的自定义命令
     this.plugin.settings.customCommands.forEach((command) => {
       const commandId = `${command.id}`;
-      if (this.plugin.app.commands.commands[`editing-toolbar:${commandId}`]) {
+      if (this.plugin.app.commands.commands[`editing-toolbar-math:${commandId}`]) {
         // 从命令注册表中移除命令
         delete this.plugin.app.commands.commands[
-          `editing-toolbar:${commandId}`
+          `editing-toolbar-math:${commandId}`
         ];
       }
     });
@@ -1384,7 +1424,7 @@ export class CommandsManager {
                 // 应用命令
                 this.applyRegexCommand(editor, command);
                 this.plugin.setLastExecutedCommand(
-                  `editing-toolbar:${commandId}`
+                  `editing-toolbar-math:${commandId}`
                 );
               });
           } else {
@@ -1403,7 +1443,7 @@ export class CommandsManager {
                 // 应用命令
                 this.applyCommand(commandConfig, editor);
                 this.plugin.setLastExecutedCommand(
-                  `editing-toolbar:${commandId}`
+                  `editing-toolbar-math:${commandId}`
                 );
               });
           }

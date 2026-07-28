@@ -1,6 +1,6 @@
 import type { ToolbarCommand } from "src/settings/ToolbarSettings";
 
-export const AI_TOOLBAR_COMMAND_ID = "editing-toolbar:ai-tools";
+export const AI_TOOLBAR_COMMAND_ID = "editing-toolbar-math:ai-tools";
 
 export function createAIToolbarCommand(): ToolbarCommand {
   return {
