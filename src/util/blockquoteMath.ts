@@ -15,7 +15,10 @@ export function toggleBlockquoteWithMath(editor: Editor): void {
   const to = editor.getCursor("to");
 
   if (from.line === to.line && from.ch === to.ch) {
-    editor.toggleMarkdownFormatting("blockquote");
+    const ed = editor as Editor & {
+      toggleMarkdownFormatting?: (name: string) => void;
+    };
+    ed.toggleMarkdownFormatting?.("blockquote");
     return;
   }
 
