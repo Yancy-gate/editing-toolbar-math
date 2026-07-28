@@ -244,6 +244,29 @@ export function buildMathAwareSegments(
  * Transform a document range with behavior B (no expand-to-full-formula).
  * Delimiters stay raw; math-inner slices get onMathInner; other text gets onText.
  */
+/**
+ * Keep $$ display-math delimiters from being glued to ==highlight== / <mark>,
+ * which breaks Obsidian Live Preview MathJax (raw $$ source shows up).
+ *
+ * Note: in String.replace replacement strings, "$$" means a literal "$",
+ * so we use function replacers whenever we need to emit "$$".
+ */
+export function normalizeDisplayMathAdjacency(text: string): string {
+  let s = text;
+  // highlight/mark immediately before opening $$
+  s = s.replace(/==\)\$\$/g, () => "==)\n$$");
+  s = s.replace(/==\$\$/g, () => "==\n$$");
+  s = s.replace(/<\/mark>\$\$/gi, () => "</mark>\n$$");
+  // closing $$ immediately followed by highlight/mark
+  s = s.replace(/\$\$\(\s*==/g, () => "$$\n(==");
+  s = s.replace(/\$\$==/g, () => "$$\n==");
+  s = s.replace(/\$\$<mark/gi, () => "$$\n<mark");
+  // prose character stuck to $$ — keep $$ on its own line
+  s = s.replace(/([^\n$])\$\$\n/g, (_m, ch: string) => `${ch}\n$$\n`);
+  s = s.replace(/\n\$\$([^\n$])/g, (_m, ch: string) => `\n$$\n${ch}`);
+  return s;
+}
+
 export function transformDocRange(
   doc: string,
   from: number,
@@ -254,11 +277,34 @@ export function transformDocRange(
   let result = "";
   for (const seg of buildMathAwareSegments(doc, from, to)) {
     const slice = doc.slice(seg.start, seg.end);
-    if (seg.kind === "delim") result += slice;
-    else if (seg.kind === "math-inner") result += onMathInner(slice);
-    else result += onText(slice);
+    let piece: string;
+    if (seg.kind === "delim") piece = slice;
+    else if (seg.kind === "math-inner") piece = onMathInner(slice);
+    else piece = onText(slice);
+
+    // Separate $$ delimiters from adjacent highlight/prose inside the selection result
+    if (
+      seg.kind === "delim" &&
+      slice.startsWith("$$") &&
+      result.length > 0 &&
+      !/\n$/.test(result)
+    ) {
+      result += "\n";
+    }
+    if (
+      result.endsWith("$$") &&
+      piece.length > 0 &&
+      !piece.startsWith("\n") &&
+      (/^==/.test(piece) ||
+        /^\(==/.test(piece) ||
+        /^<mark/i.test(piece) ||
+        /^\(/.test(piece))
+    ) {
+      result += "\n";
+    }
+    result += piece;
   }
-  return result;
+  return normalizeDisplayMathAdjacency(result);
 }
 
 export function applyBackgroundToDocRange(

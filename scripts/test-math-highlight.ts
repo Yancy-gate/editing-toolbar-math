@@ -15,6 +15,7 @@ import {
   toggleEqualsHighlightWithMath,
   toggleEqualsHighlightInDocRange,
   decideHighlightToggle,
+  normalizeDisplayMathAdjacency,
 } from "../src/util/mathHighlight";
 
 {
@@ -115,6 +116,16 @@ assert.strictEqual(cssColorToBboxColor("#FFE066"), "#FFE066");
   assert.strictEqual(on, "\\bbox[#ffe066]{\\lambda_2}");
   const off = toggleEqualsHighlightInDocRange(on, 0, on.length);
   assert.strictEqual(off, "\\lambda_2");
+}
+
+{
+  const broken =
+    "特征值==)$$\n\\left| b \\pmb {E} \\right|\n$$(==注意行列式==)";
+  const fixed = normalizeDisplayMathAdjacency(broken);
+  assert.ok(fixed.includes("==)\n$$"));
+  assert.ok(fixed.includes("$$\n(=="));
+  assert.ok(!/==\)\$\$/.test(fixed));
+  assert.ok(!/\$\$\(==/.test(fixed));
 }
 
 console.log("mathHighlight tests passed");
