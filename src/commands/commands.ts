@@ -22,6 +22,7 @@ import {
   toggleEqualsHighlightInDocRange,
   DEFAULT_HIGHLIGHT_BBOX_COLOR,
 } from "src/util/mathHighlight";
+import { toggleBlockquoteWithMath } from "src/util/blockquoteMath";
 import { fullscreenMode, workplacefullscreenMode } from "src/util/fullscreen";
 import editingToolbarPlugin from "src/plugin/main";
 import { InsertCalloutModal } from "src/modals/insertCalloutModal";
@@ -1298,6 +1299,10 @@ export class CommandsManager {
           const editor = this.getActiveEditor();
           editor &&
             this.executeCommandWithoutBlur(editor, async () => {
+              if (type["id"] === "editor:toggle-blockquote") {
+                toggleBlockquoteWithMath(editor);
+                return;
+              }
               const curserEnd = editor.getCursor("to");
               let char = this.getCharacterOffset(type["id"]);
               await this.plugin.app.commands.executeCommandById(
