@@ -12,8 +12,8 @@ on:
         tags:
             - "*" # Push events to matching any tag format, i.e. 1.0, 20.15.10
 env:
-    PLUGIN_NAME: editing-toolbar
-    OUTPUT_DIR: ./Editing-Toolbar-Test-Vault/.obsidian/plugins/editing-toolbar
+    PLUGIN_NAME: editing-toolbar-math
+    OUTPUT_DIR: ./Editing-Toolbar-Test-Vault/.obsidian/plugins/editing-toolbar-math
 
 jobs:
     build:
