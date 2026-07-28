@@ -20,6 +20,7 @@ import {
 } from "src/util/util";
 import {
   toggleEqualsHighlightInDocRange,
+  toggleEqualsHighlightWithMath,
   DEFAULT_HIGHLIGHT_BBOX_COLOR,
 } from "src/util/mathHighlight";
 import { toggleBlockquoteWithMath } from "src/util/blockquoteMath";
@@ -1082,7 +1083,14 @@ export class CommandsManager {
               editor.replaceSelection(next);
             }
           } catch {
-            editor.toggleMarkdownFormatting("highlight");
+            // Keep math-aware behavior even if offset conversion fails
+            const next = toggleEqualsHighlightWithMath(
+              selectText,
+              DEFAULT_HIGHLIGHT_BBOX_COLOR
+            );
+            if (next !== selectText) {
+              editor.replaceSelection(next);
+            }
           }
         });
       },

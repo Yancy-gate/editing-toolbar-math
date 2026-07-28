@@ -119,6 +119,14 @@ assert.strictEqual(cssColorToBboxColor("#FFE066"), "#FFE066");
 }
 
 {
+  const doc = "故 $A^*$ 有特征值";
+  const out = toggleEqualsHighlightInDocRange(doc, 0, doc.length);
+  assert.ok(out.includes("==故 =="));
+  assert.ok(out.includes("$\\bbox[#ffe066]{A^*}$"));
+  assert.ok(out.includes("== 有特征值=="));
+}
+
+{
   const broken =
     "特征值==)$$\n\\left| b \\pmb {E} \\right|\n$$(==注意行列式==)";
   const fixed = normalizeDisplayMathAdjacency(broken);
