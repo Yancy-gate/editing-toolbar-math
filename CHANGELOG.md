@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.0.11-math.9 (2026-07-29)
+### fixed
+- Highlight whitespace around/between inline math: wrap non-empty lines including spaces-only; spaces become &nbsp; inside mark tags.
+- Strip path restores &nbsp; / NBSP to normal spaces on toggle-off.
+- CSS: white-space: pre-wrap on mark so space highlights keep width.
+
 ## 4.0.11-math.8 (2026-07-29)
 ### fixed
 - Treat flanking `==` + `\\bbox` as broken highlight and auto-repair to `<mark>` + `\\bbox`.

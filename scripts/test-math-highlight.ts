@@ -51,7 +51,7 @@ assert.strictEqual(cssColorToBboxColor("#FFE066"), "#FFE066");
   const input = "故 $A^*$ 有特征值 $\\frac{|A|}{\\lambda}$ 。";
   const out = applyBackgroundWithMath(input, "rgb(255, 248, 143)");
   assert.ok(
-    out.includes('<mark style="background:rgb(255, 248, 143)">故 </mark>')
+    out.includes('<mark style="background:rgb(255, 248, 143)">故&nbsp;</mark>')
   );
   assert.ok(out.includes("$\\bbox[#fff88f]{A^*}$"));
   assert.ok(out.includes("$\\bbox[#fff88f]{\\frac{|A|}{\\lambda}}$"));
@@ -94,8 +94,8 @@ assert.strictEqual(cssColorToBboxColor("#FFE066"), "#FFE066");
   assert.ok(out.includes("$\\bbox[#ffe066]{A^*}$"));
   // Mixed text+math must NOT use == (greedy == swallows math and breaks render)
   assert.ok(!out.includes("=="));
-  assert.ok(out.includes('<mark style="background:#ffe066">故 </mark>'));
-  assert.ok(out.includes('<mark style="background:#ffe066"> 有特征值</mark>'));
+  assert.ok(out.includes('<mark style="background:#ffe066">故&nbsp;</mark>'));
+  assert.ok(out.includes('<mark style="background:#ffe066">&nbsp;有特征值</mark>'));
   for (const m of out.matchAll(
     /<mark[^>]*>([\s\S]*?)<\/mark>/g
   )) {
@@ -128,9 +128,9 @@ assert.strictEqual(cssColorToBboxColor("#FFE066"), "#FFE066");
 {
   const doc = "故 $A^*$ 有特征值";
   const out = toggleEqualsHighlightInDocRange(doc, 0, doc.length);
-  assert.ok(out.includes('<mark style="background:#ffe066">故 </mark>'));
+  assert.ok(out.includes('<mark style="background:#ffe066">故&nbsp;</mark>'));
   assert.ok(out.includes("$\\bbox[#ffe066]{A^*}$"));
-  assert.ok(out.includes('<mark style="background:#ffe066"> 有特征值</mark>'));
+  assert.ok(out.includes('<mark style="background:#ffe066">&nbsp;有特征值</mark>'));
   assert.ok(!out.includes("=="));
 
   const off = toggleEqualsHighlightInDocRange(out, 0, out.length);
@@ -151,10 +151,10 @@ assert.strictEqual(cssColorToBboxColor("#FFE066"), "#FFE066");
   const fixed = toggleEqualsHighlightWithMath(broken);
   assert.ok(!fixed.includes("=="), fixed);
   assert.ok(fixed.includes('<mark style="background:#ffe066">因为</mark>'));
-  assert.ok(fixed.includes('<mark style="background:#ffe066">是属于矩阵 </mark>'));
-  assert.ok(fixed.includes('<mark style="background:#ffe066"> 的不同特征值的特征向量，故</mark>'));
-  assert.ok(fixed.includes('<mark style="background:#ffe066">不是 </mark>'));
-  assert.ok(fixed.includes('<mark style="background:#ffe066"> 的特征向量</mark>'));
+  assert.ok(fixed.includes('<mark style="background:#ffe066">是属于矩阵&nbsp;</mark>'));
+  assert.ok(fixed.includes('<mark style="background:#ffe066">&nbsp;的不同特征值的特征向量，故</mark>'));
+  assert.ok(fixed.includes('<mark style="background:#ffe066">不是&nbsp;</mark>'));
+  assert.ok(fixed.includes('<mark style="background:#ffe066">&nbsp;的特征向量</mark>'));
   assert.ok(fixed.includes("$\\bbox[#ffe066]{\\alpha_{1},\\alpha_{3}}$"));
   assert.ok(fixed.includes("$\\bbox[#ffe066]{A}$"));
   assert.ok(fixed.includes("$\\bbox[#ffe066]{\\alpha_{1}+\\alpha_{3}}$"));
@@ -173,6 +173,34 @@ assert.strictEqual(cssColorToBboxColor("#FFE066"), "#FFE066");
   assert.ok(fixed.includes("$$\n(=="));
   assert.ok(!/==\)\$\$/.test(fixed));
   assert.ok(!/\$\$\(==/.test(fixed));
+}
+
+
+{
+  // Space highlighting around formulas (nbsp inside mark)
+  const color = "#ffe066";
+  const around = toggleEqualsHighlightWithMath("前 $A$ 后");
+  assert.ok(around.includes('<mark style="background:#ffe066">前&nbsp;</mark>'));
+  assert.ok(around.includes("$\\bbox[#ffe066]{A}$"));
+  assert.ok(around.includes('<mark style="background:#ffe066">&nbsp;后</mark>'));
+
+  const mid = toggleEqualsHighlightWithMath("$A$ $B$");
+  assert.ok(mid.includes("$\\bbox[#ffe066]{A}$"));
+  assert.ok(mid.includes("$\\bbox[#ffe066]{B}$"));
+  assert.ok(
+    mid.includes('<mark style="background:#ffe066">&nbsp;</mark>'),
+    "middle space(s) should be wrapped: " + mid
+  );
+
+  const padded = toggleEqualsHighlightWithMath(" $A$ ");
+  assert.ok(padded.startsWith('<mark style="background:#ffe066">&nbsp;</mark>'));
+  assert.ok(padded.includes("$\\bbox[#ffe066]{A}$"));
+  assert.ok(padded.endsWith('<mark style="background:#ffe066">&nbsp;</mark>'));
+
+  const off = toggleEqualsHighlightWithMath(padded);
+  assert.strictEqual(off, " $A$ ");
+  assert.ok(!off.includes("&nbsp;"));
+  assert.ok(!off.includes("<mark"));
 }
 
 console.log("mathHighlight tests passed");

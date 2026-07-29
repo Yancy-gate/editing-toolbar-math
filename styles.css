@@ -2758,6 +2758,7 @@ body.auto-hide-header .workspace-tab-header-container + .workspace-tab-container
 .markdown-reading-view mark {
   background-color: #ffe066;
   color: inherit;
+  white-space: pre-wrap;
 }
 
 .markdown-source-view.mod-cm6 mark + .cm-widgetBuffer + span.math,

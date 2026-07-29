@@ -163,6 +163,16 @@ export function applyBboxToMathInner(inner: string, color: string): string {
   return `\\bbox[${bboxColor}]{${body}}`;
 }
 
+/** Convert regular spaces to &nbsp; so HTML/Obsidian keeps highlight width. */
+function spacesToNbsp(s: string): string {
+  return s.replace(/ /g, "&nbsp;");
+}
+
+/** Restore &nbsp; / NBSP to normal spaces when stripping marks. */
+function nbspToSpaces(s: string): string {
+  return s.replace(/&nbsp;/gi, " ").replace(/\u00a0/g, " ");
+}
+
 /** Apply existing <mark> background wrap to non-math text. */
 export function applyMarkBackground(text: string, color: string): string {
   if (!text) return text;
@@ -188,7 +198,9 @@ export function applyMarkBackground(text: string, color: string): string {
   return text
     .split("\n")
     .map((line) =>
-      line.trim() ? `<mark style="background:${color}">${line}</mark>` : line
+      line.length > 0
+        ? `<mark style="background:${color}">${spacesToNbsp(line)}</mark>`
+        : line
     )
     .join("\n");
 }
@@ -362,7 +374,8 @@ function wrapEqualsSegments(text: string): string {
   return text
     .split("\n")
     .map((line) => {
-      if (!line) return line;
+      // Keep truly empty lines; wrap whitespace-only (" ") too
+      if (line.length === 0) return line;
       const trimmed = line.trim();
       if (trimmed.startsWith("==") && trimmed.endsWith("==")) return line;
       return `==${line}==`;
@@ -378,7 +391,7 @@ function unwrapEquals(text: string): string {
 export function stripMarkTags(text: string): string {
   return text.replace(
     /<mark\s+style=["']?background:(?:#[0-9a-fA-F]{3,6}|rgba?\([^)]+\))["']?>([\s\S]*?)<\/mark>/gi,
-    "$1"
+    (_m, inner: string) => nbspToSpaces(inner)
   );
 }
 
