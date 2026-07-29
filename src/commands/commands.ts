@@ -1072,18 +1072,26 @@ export class CommandsManager {
           try {
             const fromOff = editor.posToOffset(editor.getCursor("from"));
             const toOff = editor.posToOffset(editor.getCursor("to"));
-            // Behavior B: do not expand to full formula
-            const next = toggleEqualsHighlightInDocRange(
-              editor.getValue(),
-              fromOff,
-              toOff,
-              DEFAULT_HIGHLIGHT_BBOX_COLOR
-            );
+            const doc = editor.getValue();
+            // Prefer selection text when it matches the offset slice (avoids
+            // Live Preview widget offset drift). Always keep math-aware path.
+            const slice = doc.slice(fromOff, toOff);
+            const next =
+              slice === selectText
+                ? toggleEqualsHighlightInDocRange(
+                    doc,
+                    fromOff,
+                    toOff,
+                    DEFAULT_HIGHLIGHT_BBOX_COLOR
+                  )
+                : toggleEqualsHighlightWithMath(
+                    selectText,
+                    DEFAULT_HIGHLIGHT_BBOX_COLOR
+                  );
             if (next !== selectText) {
               editor.replaceSelection(next);
             }
           } catch {
-            // Keep math-aware behavior even if offset conversion fails
             const next = toggleEqualsHighlightWithMath(
               selectText,
               DEFAULT_HIGHLIGHT_BBOX_COLOR

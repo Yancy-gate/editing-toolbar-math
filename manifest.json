@@ -1,7 +1,7 @@
 {
   "id": "editing-toolbar-math",
   "name": "Editing Toolbar Math",
-  "version": "4.0.11-math.6",
+  "version": "4.0.11-math.7",
   "minAppVersion": "0.14.0",
   "description": "Fork of Editing Toolbar: math-aware highlight / background (\\bbox), blockquote continuity through formulas. Disable original Editing Toolbar while using this.",
   "author": "Cuman (fork)",

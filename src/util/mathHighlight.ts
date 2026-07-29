@@ -374,31 +374,65 @@ function unwrapEquals(text: string): string {
   return text.replace(/==([\s\S]*?)==/g, "$1");
 }
 
+/** Strip <mark style="background:...">...</mark> wrappers. */
+export function stripMarkTags(text: string): string {
+  return text.replace(
+    /<mark\s+style=["']?background:(?:#[0-9a-fA-F]{3,6}|rgba?\([^)]+\))["']?>([\s\S]*?)<\/mark>/gi,
+    "$1"
+  );
+}
+
+function unwrapHighlightChrome(text: string): string {
+  return unwrapEquals(stripMarkTags(text));
+}
+
 function containsMath(text: string): boolean {
   return findMathRanges(text).length > 0;
+}
+
+function rangeOverlapsMath(doc: string, from: number, to: number): boolean {
+  return findMathRanges(doc).some((r) => r.start < to && r.end > from);
 }
 
 function containsMathBbox(text: string): boolean {
   return /\\bbox\s*[\[{]/.test(text) || /\\colorbox\s*\{/.test(text);
 }
 
+function containsMarkBackground(text: string): boolean {
+  return /<mark\s+style=["']?background:/i.test(text);
+}
+
+/**
+ * Highlight a doc range.
+ * - Pure text → Markdown ==...==
+ * - Any overlap with $...$ / $$...$$ → text uses <mark>, math uses \\bbox
+ *
+ * Why mark for mixed selections: Obsidian's == highlighter can greedily span
+ * across flanking == runs and swallow the math in between, breaking MathJax
+ * (raw source / no yellow). <mark> does not have that problem.
+ */
 export function applyEqualsHighlightToDocRange(
   doc: string,
   from: number,
   to: number,
   color: string = DEFAULT_HIGHLIGHT_BBOX_COLOR
 ): string {
+  const useMarkForText = rangeOverlapsMath(doc, from, to);
   return transformDocRange(
     doc,
     from,
     to,
-    (text) => wrapEqualsSegments(text),
+    (text) =>
+      useMarkForText
+        ? applyMarkBackground(text, color)
+        : wrapEqualsSegments(text),
     (inner) => applyBboxToMathInner(inner, color)
   );
 }
 
 /**
- * Markdown ==highlight== with math: text → ==...==, formulas → \\bbox.
+ * Markdown ==highlight== with math: pure text → ==...==;
+ * mixed / math → <mark> + \\bbox.
  */
 export function applyEqualsHighlightWithMath(
   text: string,
@@ -408,28 +442,31 @@ export function applyEqualsHighlightWithMath(
 }
 
 export function stripEqualsHighlightWithMath(text: string): string {
-  return stripMathBackgrounds(unwrapEquals(text));
+  return stripMathBackgrounds(unwrapHighlightChrome(text));
 }
 
 export type HighlightToggleMode = "apply" | "remove" | "repair";
 
 /**
  * Decide highlight toggle behavior for a selection.
- * - repair: ==...$math$...== without bbox → rewrite to math-aware form
- * - remove: already math-aware or plain == → strip
+ * - repair: ==...$math$...== (or mark wrapping math) without bbox → rewrite
+ * - remove: already math-aware / mark / plain == → strip
  * - apply: add highlight
  */
 export function decideHighlightToggle(text: string): HighlightToggleMode {
   const trimmed = text.trim();
   const hasEquals = /==[\s\S]*?==/.test(text);
-  const hasMath = containsMath(unwrapEquals(text));
+  const hasMark = containsMarkBackground(text);
+  const plain = unwrapHighlightChrome(text);
+  const hasMath = containsMath(plain);
   const hasBbox = containsMathBbox(text);
 
-  if (hasEquals && hasMath && !hasBbox) {
+  if ((hasEquals || hasMark) && hasMath && !hasBbox) {
     return "repair";
   }
   if (
     hasBbox ||
+    hasMark ||
     (hasEquals && trimmed.startsWith("==") && trimmed.endsWith("=="))
   ) {
     return "remove";
@@ -443,7 +480,7 @@ export function toggleEqualsHighlightWithMath(
 ): string {
   const mode = decideHighlightToggle(text);
   if (mode === "repair") {
-    return applyEqualsHighlightWithMath(unwrapEquals(text), color);
+    return applyEqualsHighlightWithMath(unwrapHighlightChrome(text), color);
   }
   if (mode === "remove") {
     return stripEqualsHighlightWithMath(text);
@@ -468,18 +505,14 @@ export function toggleEqualsHighlightInDocRange(
       doc,
       from,
       to,
-      (text) => stripOuterMathBackground(unwrapEquals(text)),
+      (text) => stripOuterMathBackground(unwrapHighlightChrome(text)),
       (inner) => stripOuterMathBackground(inner)
     );
   }
 
   if (mode === "repair") {
-    return applyEqualsHighlightToDocRange(
-      unwrapEquals(selected),
-      0,
-      unwrapEquals(selected).length,
-      color
-    );
+    const plain = unwrapHighlightChrome(selected);
+    return applyEqualsHighlightToDocRange(plain, 0, plain.length, color);
   }
 
   return applyEqualsHighlightToDocRange(doc, from, to, color);

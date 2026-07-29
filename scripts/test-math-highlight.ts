@@ -92,9 +92,14 @@ assert.strictEqual(cssColorToBboxColor("#FFE066"), "#FFE066");
   const input = "故 $A^*$ 有特征值";
   const out = toggleEqualsHighlightWithMath(input);
   assert.ok(out.includes("$\\bbox[#ffe066]{A^*}$"));
-  assert.ok(out.includes("=="));
-  for (const m of out.matchAll(/==([\s\S]*?)==/g)) {
-    assert.strictEqual(findMathRanges(m[1]).length, 0, `math inside ==: ${m[1]}`);
+  // Mixed text+math must NOT use == (greedy == swallows math and breaks render)
+  assert.ok(!out.includes("=="));
+  assert.ok(out.includes('<mark style="background:#ffe066">故 </mark>'));
+  assert.ok(out.includes('<mark style="background:#ffe066"> 有特征值</mark>'));
+  for (const m of out.matchAll(
+    /<mark[^>]*>([\s\S]*?)<\/mark>/g
+  )) {
+    assert.strictEqual(findMathRanges(m[1]).length, 0, `math inside mark: ${m[1]}`);
   }
 
   const broken = "==$\\lambda$ 是 $P^{-1}AP$ 的特征值==";
@@ -102,10 +107,12 @@ assert.strictEqual(cssColorToBboxColor("#FFE066"), "#FFE066");
   const repaired = toggleEqualsHighlightWithMath(broken);
   assert.ok(repaired.includes("\\bbox[#ffe066]{\\lambda}"));
   assert.ok(repaired.includes("\\bbox[#ffe066]{P^{-1}AP}"));
+  assert.ok(!repaired.includes("=="));
 
   const removed = toggleEqualsHighlightWithMath(repaired);
   assert.ok(!removed.includes("\\bbox"));
   assert.ok(!removed.includes("=="));
+  assert.ok(!removed.includes("<mark"));
 }
 
 {
@@ -121,9 +128,19 @@ assert.strictEqual(cssColorToBboxColor("#FFE066"), "#FFE066");
 {
   const doc = "故 $A^*$ 有特征值";
   const out = toggleEqualsHighlightInDocRange(doc, 0, doc.length);
-  assert.ok(out.includes("==故 =="));
+  assert.ok(out.includes('<mark style="background:#ffe066">故 </mark>'));
   assert.ok(out.includes("$\\bbox[#ffe066]{A^*}$"));
-  assert.ok(out.includes("== 有特征值=="));
+  assert.ok(out.includes('<mark style="background:#ffe066"> 有特征值</mark>'));
+  assert.ok(!out.includes("=="));
+
+  const off = toggleEqualsHighlightInDocRange(out, 0, out.length);
+  assert.strictEqual(off, doc);
+}
+
+{
+  // Pure text still uses ==
+  const out = toggleEqualsHighlightWithMath("只有文字");
+  assert.strictEqual(out, "==只有文字==");
 }
 
 {

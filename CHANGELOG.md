@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.0.11-math.7 (2026-07-29)
+### fixed
+- Mixed text+formula highlight no longer uses flanking `==` runs (Obsidian can greedily wrap math and break rendering).
+- Mixed selections now use `<mark>` for prose and `\bbox` for math; pure text still uses `==`.
+
 ## 4.0.11-math.6 (2026-07-28)
 ### fixed
 - Keep highlight fallback math-aware for mixed text + formula selections.
