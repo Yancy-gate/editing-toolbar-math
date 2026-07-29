@@ -144,6 +144,28 @@ assert.strictEqual(cssColorToBboxColor("#FFE066"), "#FFE066");
 }
 
 {
+  // Real note: flanking == + \\bbox (broken Live Preview). Must REPAIR to <mark>+\\bbox.
+  const broken =
+    "==因为==$\\bbox[#ffe066]{\\alpha_{1},\\alpha_{3}}$==是属于矩阵 ==$\\bbox[#ffe066]{A}$== 的不同特征值的特征向量，故==$\\bbox[#ffe066]{\\alpha_{1}+\\alpha_{3}}$==不是 ==$\\bbox[#ffe066]{A}$== 的特征向量==";
+  assert.strictEqual(decideHighlightToggle(broken), "repair");
+  const fixed = toggleEqualsHighlightWithMath(broken);
+  assert.ok(!fixed.includes("=="), fixed);
+  assert.ok(fixed.includes('<mark style="background:#ffe066">因为</mark>'));
+  assert.ok(fixed.includes('<mark style="background:#ffe066">是属于矩阵 </mark>'));
+  assert.ok(fixed.includes('<mark style="background:#ffe066"> 的不同特征值的特征向量，故</mark>'));
+  assert.ok(fixed.includes('<mark style="background:#ffe066">不是 </mark>'));
+  assert.ok(fixed.includes('<mark style="background:#ffe066"> 的特征向量</mark>'));
+  assert.ok(fixed.includes("$\\bbox[#ffe066]{\\alpha_{1},\\alpha_{3}}$"));
+  assert.ok(fixed.includes("$\\bbox[#ffe066]{A}$"));
+  assert.ok(fixed.includes("$\\bbox[#ffe066]{\\alpha_{1}+\\alpha_{3}}$"));
+
+  const plain = toggleEqualsHighlightWithMath(fixed);
+  assert.ok(!plain.includes("\\bbox"));
+  assert.ok(!plain.includes("<mark"));
+  assert.ok(plain.includes("因为$\\alpha_{1},\\alpha_{3}$是属于矩阵 $A$"));
+}
+
+{
   const broken =
     "特征值==)$$\n\\left| b \\pmb {E} \\right|\n$$(==注意行列式==)";
   const fixed = normalizeDisplayMathAdjacency(broken);

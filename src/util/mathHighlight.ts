@@ -449,8 +449,8 @@ export type HighlightToggleMode = "apply" | "remove" | "repair";
 
 /**
  * Decide highlight toggle behavior for a selection.
- * - repair: ==...$math$...== (or mark wrapping math) without bbox → rewrite
- * - remove: already math-aware / mark / plain == → strip
+ * - repair: == used with math/bbox (broken flanking ==), or ==/mark wrapping math without bbox
+ * - remove: clean math-aware mark+bbox, or plain ==
  * - apply: add highlight
  */
 export function decideHighlightToggle(text: string): HighlightToggleMode {
@@ -461,7 +461,11 @@ export function decideHighlightToggle(text: string): HighlightToggleMode {
   const hasMath = containsMath(plain);
   const hasBbox = containsMathBbox(text);
 
-  if ((hasEquals || hasMark) && hasMath && !hasBbox) {
+  // Flanking == around math/bbox breaks Obsidian highlighting — rewrite to <mark>+\\bbox
+  if (hasEquals && (hasMath || hasBbox)) {
+    return "repair";
+  }
+  if (hasMark && hasMath && !hasBbox) {
     return "repair";
   }
   if (
@@ -480,7 +484,8 @@ export function toggleEqualsHighlightWithMath(
 ): string {
   const mode = decideHighlightToggle(text);
   if (mode === "repair") {
-    return applyEqualsHighlightWithMath(unwrapHighlightChrome(text), color);
+    const plain = stripMathBackgrounds(unwrapHighlightChrome(text));
+    return applyEqualsHighlightWithMath(plain, color);
   }
   if (mode === "remove") {
     return stripEqualsHighlightWithMath(text);
@@ -511,7 +516,7 @@ export function toggleEqualsHighlightInDocRange(
   }
 
   if (mode === "repair") {
-    const plain = unwrapHighlightChrome(selected);
+    const plain = stripMathBackgrounds(unwrapHighlightChrome(selected));
     return applyEqualsHighlightToDocRange(plain, 0, plain.length, color);
   }
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.0.11-math.8 (2026-07-29)
+### fixed
+- Treat flanking `==` + `\\bbox` as broken highlight and auto-repair to `<mark>` + `\\bbox`.
+- Re-clicking highlight on already-broken mixed sentences rewrites them instead of stripping.
+- CSS: keep yellow continuous across adjacent `<mark>` and inline math.
+
 ## 4.0.11-math.7 (2026-07-29)
 ### fixed
 - Mixed text+formula highlight no longer uses flanking `==` runs (Obsidian can greedily wrap math and break rendering).

@@ -2752,6 +2752,30 @@ body.auto-hide-header .workspace-tab-header-container + .workspace-tab-container
   border-radius: 2px;
 }
 
+/* Live Preview: keep yellow continuous across <mark> + inline math (+ html mark) */
+.markdown-source-view.mod-cm6 mark,
+.markdown-preview-view mark,
+.markdown-reading-view mark {
+  background-color: #ffe066;
+  color: inherit;
+}
+
+.markdown-source-view.mod-cm6 mark + .cm-widgetBuffer + span.math,
+.markdown-source-view.mod-cm6 mark + .cm-widgetBuffer + .math,
+.markdown-source-view.mod-cm6 span.math + .cm-widgetBuffer + mark,
+.markdown-source-view.mod-cm6 .math + .cm-widgetBuffer + mark {
+  background-color: #ffe066 !important;
+  border-radius: 2px;
+}
+
+/* Inline MathJax next to mark in reading view */
+.markdown-preview-view mark + mjx-container,
+.markdown-reading-view mark + mjx-container,
+.markdown-preview-view mjx-container + mark,
+.markdown-reading-view mjx-container + mark {
+  background-color: #ffe066 !important;
+}
+
 /* ---- Blockquote bar through display math / embeds (Editing Toolbar Math) ---- */
 .markdown-source-view.mod-cm6.is-live-preview .cm-line.cm-quote,
 .markdown-source-view.mod-cm6.is-live-preview .cm-line.HyperMD-quote {
