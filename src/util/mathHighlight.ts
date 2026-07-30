@@ -415,14 +415,29 @@ function containsMarkBackground(text: string): boolean {
   return /<mark\s+style=["']?background:/i.test(text);
 }
 
+/** True if this slice must avoid Markdown == (math / bbox / $ delimiters). */
+export function selectionNeedsMarkHighlight(
+  doc: string,
+  from: number,
+  to: number
+): boolean {
+  const slice = doc.slice(from, to);
+  return (
+    rangeOverlapsMath(doc, from, to) ||
+    containsMath(slice) ||
+    containsMathBbox(slice) ||
+    /\$|\\\(|\\\[/.test(slice)
+  );
+}
+
 /**
  * Highlight a doc range.
  * - Pure text → Markdown ==...==
- * - Any overlap with $...$ / $$...$$ → text uses <mark>, math uses \\bbox
+ * - Any math / $ / \\bbox → text uses <mark> (never ==), math uses \\bbox
  *
  * Why mark for mixed selections: Obsidian's == highlighter can greedily span
  * across flanking == runs and swallow the math in between, breaking MathJax
- * (raw source / no yellow). <mark> does not have that problem.
+ * and leaving bare "==" plus un-highlighted prose.
  */
 export function applyEqualsHighlightToDocRange(
   doc: string,
@@ -430,7 +445,7 @@ export function applyEqualsHighlightToDocRange(
   to: number,
   color: string = DEFAULT_HIGHLIGHT_BBOX_COLOR
 ): string {
-  const useMarkForText = rangeOverlapsMath(doc, from, to);
+  const useMarkForText = selectionNeedsMarkHighlight(doc, from, to);
   return transformDocRange(
     doc,
     from,
@@ -468,24 +483,28 @@ export type HighlightToggleMode = "apply" | "remove" | "repair";
  */
 export function decideHighlightToggle(text: string): HighlightToggleMode {
   const trimmed = text.trim();
-  const hasEquals = /==[\s\S]*?==/.test(text);
+  const hasEqualsPair = /==[\s\S]*?==/.test(text);
+  const hasEqualsToken = text.includes("==");
   const hasMark = containsMarkBackground(text);
   const plain = unwrapHighlightChrome(text);
   const hasMath = containsMath(plain);
   const hasBbox = containsMathBbox(text);
+  const hasDollar = /\$|\\\(|\\\[/.test(plain);
 
-  // Flanking == around math/bbox breaks Obsidian highlighting — rewrite to <mark>+\\bbox
-  if (hasEquals && (hasMath || hasBbox)) {
+  // Any == near math/$/bbox is unsafe in Obsidian — rewrite to <mark>+\\bbox
+  if (hasEqualsToken && (hasMath || hasBbox || hasDollar)) {
     return "repair";
   }
   if (hasMark && hasMath && !hasBbox) {
     return "repair";
   }
   if (
-    hasBbox ||
-    hasMark ||
-    (hasEquals && trimmed.startsWith("==") && trimmed.endsWith("=="))
+    (hasBbox || hasMark) &&
+    !hasEqualsToken
   ) {
+    return "remove";
+  }
+  if (hasEqualsPair && trimmed.startsWith("==") && trimmed.endsWith("==")) {
     return "remove";
   }
   return "apply";

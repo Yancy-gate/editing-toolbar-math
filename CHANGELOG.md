@@ -1,5 +1,12 @@
 # Changelog
 
+## 4.0.11-math.10 (2026-07-30)
+### fixed
+- Mixed selections with `$` / formulas never emit Markdown `==` (Obsidian greedy `==` was killing prose highlight between formulas).
+- Any `==` near math/`$`/`\\bbox` is treated as broken and repaired to `<mark>` + `\\bbox`.
+- Highlight command prefers the selection string when it contains `$` or `==` (avoids Live Preview offset drift falling back to `==`).
+- Format brush / format detection now points at `editing-toolbar-math:toggle-highlight` instead of native `editor:toggle-highlight`.
+
 ## 4.0.11-math.9 (2026-07-29)
 ### fixed
 - Highlight whitespace around/between inline math: wrap non-empty lines including spaces-only; spaces become &nbsp; inside mark tags.

@@ -1070,24 +1070,33 @@ export class CommandsManager {
           }
 
           try {
-            const fromOff = editor.posToOffset(editor.getCursor("from"));
-            const toOff = editor.posToOffset(editor.getCursor("to"));
-            const doc = editor.getValue();
-            // Prefer selection text when it matches the offset slice (avoids
-            // Live Preview widget offset drift). Always keep math-aware path.
-            const slice = doc.slice(fromOff, toOff);
-            const next =
-              slice === selectText
-                ? toggleEqualsHighlightInDocRange(
-                    doc,
-                    fromOff,
-                    toOff,
-                    DEFAULT_HIGHLIGHT_BBOX_COLOR
-                  )
-                : toggleEqualsHighlightWithMath(
-                    selectText,
-                    DEFAULT_HIGHLIGHT_BBOX_COLOR
-                  );
+            const needsMathAware = /\$|\\bbox|\\colorbox|\\\(|\\\[|==/.test(
+              selectText
+            );
+            let next: string;
+            if (needsMathAware) {
+              next = toggleEqualsHighlightWithMath(
+                selectText,
+                DEFAULT_HIGHLIGHT_BBOX_COLOR
+              );
+            } else {
+              const fromOff = editor.posToOffset(editor.getCursor("from"));
+              const toOff = editor.posToOffset(editor.getCursor("to"));
+              const doc = editor.getValue();
+              const slice = doc.slice(fromOff, toOff);
+              next =
+                slice === selectText
+                  ? toggleEqualsHighlightInDocRange(
+                      doc,
+                      fromOff,
+                      toOff,
+                      DEFAULT_HIGHLIGHT_BBOX_COLOR
+                    )
+                  : toggleEqualsHighlightWithMath(
+                      selectText,
+                      DEFAULT_HIGHLIGHT_BBOX_COLOR
+                    );
+            }
             if (next !== selectText) {
               editor.replaceSelection(next);
             }

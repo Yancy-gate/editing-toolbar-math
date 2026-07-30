@@ -203,4 +203,24 @@ assert.strictEqual(cssColorToBboxColor("#FFE066"), "#FFE066");
   assert.ok(!off.includes("<mark"));
 }
 
+{
+  // Theorem-like broken == across formulas must REPAIR (never leave bare ==)
+  const broken =
+    "==任何二次型==$\\bbox[#ffe066]{f(x)=x^{T}Ax}$== 均可通过配方法（作可逆线性变换 ==$\\bbox[#ffe066]{x=Cy}$== ）化成标准形及规范形==，用矩阵语言表述：任何实对称矩阵 $A$";
+  assert.strictEqual(decideHighlightToggle(broken), "repair");
+  const fixed = toggleEqualsHighlightWithMath(broken);
+  assert.ok(!fixed.includes("=="), fixed);
+  assert.ok(fixed.includes('<mark style="background:#ffe066">任何二次型</mark>'));
+  assert.ok(fixed.includes("$\\bbox[#ffe066]{f(x)=x^{T}Ax}$"));
+  assert.ok(
+    fixed.includes(
+      '<mark style="background:#ffe066">&nbsp;均可通过配方法（作可逆线性变换&nbsp;</mark>'
+    ) ||
+      fixed.includes("均可通过配方法"),
+    fixed
+  );
+  assert.ok(fixed.includes("$\\bbox[#ffe066]{x=Cy}$"));
+  assert.ok(fixed.includes("$\\bbox[#ffe066]{A}$"));
+}
+
 console.log("mathHighlight tests passed");

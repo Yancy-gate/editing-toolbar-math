@@ -1109,9 +1109,9 @@ updateCurrentCommands(commands: any[], style?: string): void {
           this.lastExecutedCommand = "editor:toggle-strikethrough";
           this.lastExecutedCommandName = "Strikethrough";
           detectedFormat = true;
-        } else if (/^==.*==$/.test(selectedText)) {
-          // 高亮
-          this.lastExecutedCommand = "editor:toggle-highlight";
+        } else if (/^==.*==$/.test(selectedText) || /^<mark\s+style=["']?background:/i.test(selectedText.trim())) {
+          // 高亮（含 math fork 的 <mark> 形式）
+          this.lastExecutedCommand = "editing-toolbar-math:toggle-highlight";
           this.lastExecutedCommandName = "Highlight";
           detectedFormat = true;
         } else if (/^`.*`$/.test(selectedText)) {
@@ -1369,7 +1369,7 @@ updateCurrentCommands(commands: any[], style?: string): void {
           const formatEnd = match.index + match[0].length;
           if (cursorPos > formatStart && cursorPos < formatEnd) {
             foundFormats.push({
-              command: "editor:toggle-highlight",
+              command: "editing-toolbar-math:toggle-highlight",
               name: "Highlight",
               distance: Math.min(
                 cursorPos - formatStart,
