@@ -21,6 +21,9 @@ import {
 import {
   toggleEqualsHighlightInDocRange,
   toggleEqualsHighlightWithMath,
+  selectionTouchesMath,
+  selectionNeedsMarkHighlight,
+  repairEqualsInsideMathSpans,
   DEFAULT_HIGHLIGHT_BBOX_COLOR,
 } from "src/util/mathHighlight";
 import { toggleBlockquoteWithMath } from "src/util/blockquoteMath";
@@ -1070,19 +1073,31 @@ export class CommandsManager {
           }
 
           try {
+            const fromOff = editor.posToOffset(editor.getCursor("from"));
+            const toOff = editor.posToOffset(editor.getCursor("to"));
+            const doc = editor.getValue();
+            const touchesMath =
+              selectionTouchesMath(doc, fromOff, toOff) ||
+              selectionNeedsMarkHighlight(doc, fromOff, toOff);
             const needsMathAware = /\$|\\bbox|\\colorbox|\\\(|\\\[|==/.test(
               selectText
             );
             let next: string;
-            if (needsMathAware) {
+            // Selection inside $...$ may omit delimiters in getSelection();
+            // always use doc offsets so math-inner gets \\bbox, never ==.
+            if (touchesMath) {
+              next = toggleEqualsHighlightInDocRange(
+                doc,
+                fromOff,
+                toOff,
+                DEFAULT_HIGHLIGHT_BBOX_COLOR
+              );
+            } else if (needsMathAware) {
               next = toggleEqualsHighlightWithMath(
                 selectText,
                 DEFAULT_HIGHLIGHT_BBOX_COLOR
               );
             } else {
-              const fromOff = editor.posToOffset(editor.getCursor("from"));
-              const toOff = editor.posToOffset(editor.getCursor("to"));
-              const doc = editor.getValue();
               const slice = doc.slice(fromOff, toOff);
               next =
                 slice === selectText
@@ -1097,14 +1112,20 @@ export class CommandsManager {
                       DEFAULT_HIGHLIGHT_BBOX_COLOR
                     );
             }
+            if (next.includes("$==") || next.includes("==$")) {
+              next = repairEqualsInsideMathSpans(next);
+            }
             if (next !== selectText) {
               editor.replaceSelection(next);
             }
           } catch {
-            const next = toggleEqualsHighlightWithMath(
+            let next = toggleEqualsHighlightWithMath(
               selectText,
               DEFAULT_HIGHLIGHT_BBOX_COLOR
             );
+            if (next.includes("$==") || next.includes("==$")) {
+              next = repairEqualsInsideMathSpans(next);
+            }
             if (next !== selectText) {
               editor.replaceSelection(next);
             }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.0.11-math.11 (2026-08-07)
+### fixed
+- Repair `$==...==$` (equals highlight wrongly inside math delimiters) to `$\\bbox[...]{...}$`.
+- When the selection touches math in the full document (even if `getSelection()` omits `$`), always use `toggleEqualsHighlightInDocRange` so math-inner gets `\\bbox`, never `==`.
+- `decideHighlightToggle` treats `$==` / `==$` as repair; `repairEqualsInsideMathSpans` sanitizes results after apply/repair.
+
 ## 4.0.11-math.10 (2026-07-30)
 ### fixed
 - Mixed selections with `$` / formulas never emit Markdown `==` (Obsidian greedy `==` was killing prose highlight between formulas).

@@ -16,6 +16,7 @@ import {
   toggleEqualsHighlightInDocRange,
   decideHighlightToggle,
   normalizeDisplayMathAdjacency,
+  repairEqualsInsideMathSpans,
 } from "../src/util/mathHighlight";
 
 {
@@ -221,6 +222,38 @@ assert.strictEqual(cssColorToBboxColor("#FFE066"), "#FFE066");
   );
   assert.ok(fixed.includes("$\\bbox[#ffe066]{x=Cy}$"));
   assert.ok(fixed.includes("$\\bbox[#ffe066]{A}$"));
+}
+
+{
+  // Broken: == wrapped inside $...$ (selection omitted delimiters)
+  const broken = "$==f_{Y}(y) = F_{Y}^{\\prime}(y)==$";
+  assert.strictEqual(decideHighlightToggle(broken), "repair");
+  const fixed = toggleEqualsHighlightWithMath(broken);
+  assert.ok(fixed.includes("\\bbox[#ffe066]{"), fixed);
+  assert.ok(fixed.includes("f_{Y}(y) = F_{Y}^{\\prime}(y)"), fixed);
+  assert.ok(!fixed.includes("=="), fixed);
+  assert.strictEqual(
+    fixed,
+    "$\\bbox[#ffe066]{f_{Y}(y) = F_{Y}^{\\prime}(y)}$"
+  );
+}
+
+{
+  // Highlight only math-inner via InDocRange → bbox, never ==
+  const doc = "前 $f_{Y}(y)$ 后";
+  const inner = "f_{Y}(y)";
+  const from = doc.indexOf(inner);
+  const to = from + inner.length;
+  const out = toggleEqualsHighlightInDocRange(doc, from, to);
+  assert.strictEqual(out, "\\bbox[#ffe066]{f_{Y}(y)}");
+  assert.ok(!out.includes("=="));
+}
+
+{
+  assert.strictEqual(
+    repairEqualsInsideMathSpans("$==x^2==$"),
+    "$\\bbox[#ffe066]{x^2}$"
+  );
 }
 
 console.log("mathHighlight tests passed");

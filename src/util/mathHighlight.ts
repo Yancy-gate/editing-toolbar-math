@@ -403,8 +403,50 @@ function containsMath(text: string): boolean {
   return findMathRanges(text).length > 0;
 }
 
-function rangeOverlapsMath(doc: string, from: number, to: number): boolean {
+/** True if [from, to) overlaps any $...$ / $$...$$ span in doc. */
+export function selectionTouchesMath(
+  doc: string,
+  from: number,
+  to: number
+): boolean {
   return findMathRanges(doc).some((r) => r.start < to && r.end > from);
+}
+
+const rangeOverlapsMath = selectionTouchesMath;
+
+/**
+ * Fix broken ==highlight== that landed inside math delimiters, e.g.
+ * `$==x^2==$` → `$\\bbox[#ffe066]{x^2}$`. Preserves $ / $$ delimiters.
+ */
+export function repairEqualsInsideMathSpans(
+  text: string,
+  color: string = DEFAULT_HIGHLIGHT_BBOX_COLOR
+): string {
+  const ranges = findMathRanges(text);
+  if (ranges.length === 0) return text;
+
+  let result = "";
+  let last = 0;
+  for (const r of ranges) {
+    result += text.slice(last, r.start);
+    const open = text.slice(r.start, r.innerStart);
+    let inner = text.slice(r.innerStart, r.innerEnd);
+    const close = text.slice(r.innerEnd, r.end);
+
+    const whole = inner.match(/^\s*==([\s\S]*?)==\s*$/);
+    if (whole) {
+      inner = applyBboxToMathInner(whole[1], color);
+    } else if (inner.includes("==") && !/\\bbox/.test(inner)) {
+      inner = applyBboxToMathInner(
+        inner.replace(/==([\s\S]*?)==/g, "$1"),
+        color
+      );
+    }
+    result += open + inner + close;
+    last = r.end;
+  }
+  result += text.slice(last);
+  return result;
 }
 
 function containsMathBbox(text: string): boolean {
@@ -446,7 +488,7 @@ export function applyEqualsHighlightToDocRange(
   color: string = DEFAULT_HIGHLIGHT_BBOX_COLOR
 ): string {
   const useMarkForText = selectionNeedsMarkHighlight(doc, from, to);
-  return transformDocRange(
+  const result = transformDocRange(
     doc,
     from,
     to,
@@ -456,6 +498,7 @@ export function applyEqualsHighlightToDocRange(
         : wrapEqualsSegments(text),
     (inner) => applyBboxToMathInner(inner, color)
   );
+  return repairEqualsInsideMathSpans(result, color);
 }
 
 /**
@@ -491,6 +534,10 @@ export function decideHighlightToggle(text: string): HighlightToggleMode {
   const hasBbox = containsMathBbox(text);
   const hasDollar = /\$|\\\(|\\\[/.test(plain);
 
+  // == landed inside $...$ (e.g. $==x^2==$) — must rewrite to \\bbox
+  if (/\$\s*==/.test(text) || /==\s*\$/.test(text)) {
+    return "repair";
+  }
   // Any == near math/$/bbox is unsafe in Obsidian — rewrite to <mark>+\\bbox
   if (hasEqualsToken && (hasMath || hasBbox || hasDollar)) {
     return "repair";
@@ -517,12 +564,18 @@ export function toggleEqualsHighlightWithMath(
   const mode = decideHighlightToggle(text);
   if (mode === "repair") {
     const plain = stripMathBackgrounds(unwrapHighlightChrome(text));
-    return applyEqualsHighlightWithMath(plain, color);
+    return repairEqualsInsideMathSpans(
+      applyEqualsHighlightWithMath(plain, color),
+      color
+    );
   }
   if (mode === "remove") {
     return stripEqualsHighlightWithMath(text);
   }
-  return applyEqualsHighlightWithMath(text, color);
+  return repairEqualsInsideMathSpans(
+    applyEqualsHighlightWithMath(text, color),
+    color
+  );
 }
 
 /**
@@ -549,8 +602,14 @@ export function toggleEqualsHighlightInDocRange(
 
   if (mode === "repair") {
     const plain = stripMathBackgrounds(unwrapHighlightChrome(selected));
-    return applyEqualsHighlightToDocRange(plain, 0, plain.length, color);
+    return repairEqualsInsideMathSpans(
+      applyEqualsHighlightToDocRange(plain, 0, plain.length, color),
+      color
+    );
   }
 
-  return applyEqualsHighlightToDocRange(doc, from, to, color);
+  return repairEqualsInsideMathSpans(
+    applyEqualsHighlightToDocRange(doc, from, to, color),
+    color
+  );
 }
